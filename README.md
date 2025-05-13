@@ -1,4 +1,4 @@
-﻿# RhbkSdk
+# RhbkSdk
 
 Bem-vindo ao **RhbkSdk**, um SDK desenvolvido para integrar aplicações com a API RHBK de forma simples e eficiente.
 
@@ -18,6 +18,7 @@ O **RhbkSdk** foi projetado para facilitar a comunicação com a API RHBK, forne
 ## Requisitos
 
 ### Para utilizar este SDK, você precisa:
+
 - **.NET 8.0 ou superior**
 - Gerenciador de pacotes NuGet para adicionar este SDK ao seu projeto.
 
@@ -48,23 +49,10 @@ Antes de usar, certifique-se de configurar a Injeção de Dependência do SDK em
 #### Exemplo de Configuração:
 
 ```csharp
-using Microsoft.Extensions.DependencyInjection;
-using Refit;
+using RhbkSdk.Extensions;
 
-public static class ServiceCollectionExtensions
-{
-    public static IServiceCollection AddRhbkSdk(this IServiceCollection services)
-    {
-        // Configurando o cliente HTTP do Refit
-        services.AddRefitClient<IRhbkApi>()
-            .ConfigureHttpClient(client =>
-            {
-                client.BaseAddress = new Uri("https://api.rhbk.com");
-            });
+builder.AddRhbkClient("https://rhbk.url.com", ServiceLifetime.Scoped);
 
-        return services;
-    }
-}
 ```
 
 ### Implementação no Projeto
