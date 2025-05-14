@@ -11,7 +11,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/wallacevff/RhbkSdk</RepositoryUrl>
-    <Version>1.1.0</Version>
+    <Version>8.0.0</Version>
     <PackageIcon>Assets\redhat.png</PackageIcon>
   </PropertyGroup>
   <ItemGroup>
@@ -20,14 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Microsoft.AspNetCore">
-      <HintPath>C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\8.0.15\Microsoft.AspNetCore.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="README.md"  Pack="true" PackagePath="">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Microsoft.AspNetCore.dll" />
+    <Content Include="Microsoft.AspNetCore.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
@@ -35,5 +33,11 @@
     <None Include="Assets\redhat.png" Pack="true" PackagePath="Assets">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.AspNetCore">
+      <HintPath>Microsoft.AspNetCore.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

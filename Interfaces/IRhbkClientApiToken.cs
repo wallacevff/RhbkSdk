@@ -10,8 +10,7 @@ public partial interface IRhbkClientApi
     [Headers("Content-Type; application/x-www-form-urlencoded")]
     public Task<ApiResponse<GetTokenResponseBody?>> GetTokenAsync(
         [AliasAs("realm")] string realm,
-        [Body(BodySerializationMethod.UrlEncoded)]
-        GetTokenRequestBody body,
+        [Body(BodySerializationMethod.UrlEncoded)] GetTokenRequestBody body,
         CancellationToken cancellationToken = default
     );
 }

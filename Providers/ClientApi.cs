@@ -1,4 +1,5 @@
-﻿using Refit;
+﻿using System.Collections;
+using Refit;
 using RhbkSdk.Interfaces;
 using RhbkSdk.Models;
 using RhbkSdk.RequestBody;
@@ -31,6 +32,8 @@ public class ClientApi : IClientApi
     }
 
 
+    #region Url Methods
+
     public string GetLoginUrl(string realm)
     {
         return $"{_baseUrl}/realms/{realm}/protocol/openid-connect/auth";
@@ -61,12 +64,21 @@ public class ClientApi : IClientApi
         return $"{_baseUrl}/realms/{realm}/protocol/openid-connect/groups";
     }
 
+    #endregion
+
+
+    #region Token Methods
+
     public async Task<GetTokenResponseBody?> GetTokenAsync(string realm, GetTokenRequestBody body,
         CancellationToken cancellationToken = default)
     {
         var result = await _clientApi.GetTokenAsync(realm, body, cancellationToken);
         return result.Content;
     }
+
+    #endregion
+
+    #region Group Methods
 
     public async Task<string?> CreateGroupAsync(string token, string realm, GroupCreateRequestBody body,
         CancellationToken cancellationToken = default)
@@ -123,9 +135,9 @@ public class ClientApi : IClientApi
             foreach (var group in groups)
             {
                 bool stillHasMembers = true;
-                while(stillHasMembers)
+                while (stillHasMembers)
                 {
-                    queryParams = queryParams ?? new Params(){First = 0};
+                    queryParams = queryParams ?? new Params() { First = 0 };
                     var users = await _clientApi.GetGroupMembersAsync($"Bearer {token}", realm, group.Id, queryParams,
                         cancellationToken);
                     queryParams.First += 1;
@@ -162,4 +174,65 @@ public class ClientApi : IClientApi
             cancellationToken);
         return result.Content;
     }
+
+    #endregion
+
+    #region Client Methods
+
+    public async Task<IList<RoleResponse>?> GetClientRolesAsync(string token, string realm, Guid clientId,
+        Params? queryParams = null)
+    {
+        var result = await _clientApi.GetClientRolesAsync($"Bearer {token}", realm, clientId, queryParams);
+        return result.Content;
+    }
+
+    public async Task<string?> CreateClientRolesAsync(string token, string realm, Guid clientId,
+        RoleCreateRequestBody body)
+    {
+        var result = await _clientApi.CreateClientRolesAsync($"Bearer {token}", realm, clientId, body);
+        return result.Content;
+    }
+
+    public async Task<string?> DeleteClientRolesAsync(string token, string realm, Guid clientId,
+        string roleName,
+        CancellationToken cancellationToken = default)
+    {
+        var result =
+            await _clientApi.DeleteClientRolesAsync($"Bearer {token}", realm, clientId, roleName, cancellationToken);
+        return result.Content;
+    }
+
+    public async Task<IList<ClientResponse>?> GetClientByNameAsync(string token, string realm, string clientName,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.GetClientByNameAsync($"Bearer {token}", realm, clientName, cancellationToken);
+        return result.Content;
+    }
+
+    #endregion
+
+    #region User Methods
+
+    public async Task<IList<UserResponse>?> GetUsersAsync(string token, string realm, Params? queryParams = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.GetUsersAsync($"Bearer {token}", realm, queryParams, cancellationToken);
+        return result.Content;
+    }
+
+    public async Task<string?> UserJoinGroupAsync(string token, string realm, Guid userId, Guid groupId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.UserJoinGroupAsync($"Bearer {token}", realm, userId, groupId, cancellationToken);
+        return result.Content;
+    }
+
+    public async Task<string?> UserLeaveGroupAsync(string token, string realm, Guid userId, Guid groupId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.UserLeaveGroupAsync($"Bearer {token}", realm, userId, groupId, cancellationToken);
+        return result.Content;
+    }
+
+    #endregion
 }
