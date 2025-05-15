@@ -10,7 +10,7 @@ public partial interface IRhbkClientApi
 {
     [Get("/admin/realms/{realm}/clients/{clientId}/roles")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<IList<RoleResponse>>> GetClientRolesAsync(
+    public Task<ApiResponse<IList<RoleResponse>?>> GetClientRolesAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [AliasAs("clientId")] Guid clientId,
@@ -20,7 +20,7 @@ public partial interface IRhbkClientApi
     
     [Post("/admin/realms/{realm}/clients/{clientId}/roles")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<string>> CreateClientRolesAsync(
+    public Task<ApiResponse<string?>> CreateClientRolesAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [AliasAs("clientId")] Guid clientId,
@@ -30,7 +30,7 @@ public partial interface IRhbkClientApi
     
     [Delete("/admin/realms/{realm}/clients/{clientId}/roles/{roleName}")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<string>> DeleteClientRolesAsync(
+    public Task<ApiResponse<string?>> DeleteClientRolesAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [AliasAs("clientId")] Guid clientId,
@@ -40,7 +40,7 @@ public partial interface IRhbkClientApi
     
     [Get("/admin/realms/{realm}/clients")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<IList<ClientResponse>>> GetClientByNameAsync(
+    public Task<ApiResponse<IList<ClientResponse>?>> GetClientByNameAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [Query("clientId")] string clientName,

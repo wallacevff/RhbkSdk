@@ -1,8 +1,6 @@
 ﻿using Refit;
 using RhbkSdk.Models;
-using RhbkSdk.RequestBody;
 using RhbkSdk.RequestParams;
-using RhbkSdk.ResponseBody;
 
 namespace RhbkSdk.Interfaces;
 
@@ -10,7 +8,7 @@ public partial interface IRhbkClientApi
 {
     [Get("/admin/realms/{realm}/users")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<IList<UserResponse>>> GetUsersAsync(
+    public Task<ApiResponse<IList<UserResponse>?>> GetUsersAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [Query] Params? queryParams = null,
@@ -19,7 +17,7 @@ public partial interface IRhbkClientApi
     
     [Put("/admin/realms/{realm}/users/{userId}/groups/{groupId}")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<string>> UserJoinGroupAsync(
+    public Task<ApiResponse<string?>> UserJoinGroupAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [AliasAs("userId")] Guid clientId,
@@ -29,7 +27,7 @@ public partial interface IRhbkClientApi
     
     [Delete("/admin/realms/{realm}/users/{userId}/groups/{groupId}")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<string>> UserLeaveGroupAsync(
+    public Task<ApiResponse<string?>> UserLeaveGroupAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [AliasAs("userId")] Guid clientId,

@@ -9,7 +9,7 @@ public partial interface IRhbkClientApi
 {
     [Post("/admin/realms/{realm}/groups")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<string>> CreateGroupAsync(
+    public Task<ApiResponse<string?>> CreateGroupAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [Body] GroupCreateRequestBody body,
@@ -19,7 +19,7 @@ public partial interface IRhbkClientApi
 
     [Get("/admin/realms/{realm}/groups")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<IList<GroupResponse>>> GetAllGroupAsync(
+    public Task<ApiResponse<IList<GroupResponse>?>> GetAllGroupAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [Query] Params? queryParams = null,
@@ -29,7 +29,7 @@ public partial interface IRhbkClientApi
 
     [Get("/admin/realms/{realm}/groups/{group_id}/children")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<IList<GroupResponse>>> GetAllSubgroupsAsync(
+    public Task<ApiResponse<IList<GroupResponse>?>> GetAllSubgroupsAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [AliasAs("group_id")] Guid groupId,
@@ -39,7 +39,7 @@ public partial interface IRhbkClientApi
 
     [Post("/admin/realms/{realm}/groups/{group_id}/children")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<string>> CreateSubGroupAsync(
+    public Task<ApiResponse<string?>> CreateSubGroupAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [AliasAs("group_id")] Guid groupId,
@@ -49,7 +49,7 @@ public partial interface IRhbkClientApi
     
     [Get("/admin/realms/{realm}/groups/{group_id}/members")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<IList<UserResponse>>> GetGroupMembersAsync(
+    public Task<ApiResponse<IList<UserResponse>?>> GetGroupMembersAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [AliasAs("group_id")] Guid groupId,
@@ -59,7 +59,7 @@ public partial interface IRhbkClientApi
     
     [Delete("/admin/realms/{realm}/groups/{group_id}")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<IList<UserResponse>>> DeleteGroupAsync(
+    public Task<ApiResponse<IList<UserResponse>?>> DeleteGroupAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [AliasAs("group_id")] Guid groupId,
@@ -69,7 +69,7 @@ public partial interface IRhbkClientApi
     
     [Get("/admin/realms/{realm}/groups/{group_id}/role-mappings/clients/{client_id}")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<IList<RoleGroupMapping>>> GetGroupClientRolesAsync(
+    public Task<ApiResponse<IList<RoleGroupMapping>?>> GetGroupClientRolesAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [AliasAs("group_id")] Guid groupId,
@@ -81,7 +81,7 @@ public partial interface IRhbkClientApi
     
     [Post("/admin/realms/{realm}/groups/{group_id}/role-mappings/clients/{client_id}")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<string>> CreateGroupClientRolesAsync(
+    public Task<ApiResponse<string?>> CreateGroupClientRolesAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [AliasAs("group_id")] Guid groupId,
@@ -92,7 +92,7 @@ public partial interface IRhbkClientApi
     
     [Delete("/admin/realms/{realm}/groups/{group_id}/role-mappings/clients/{client_id}")]
     [Headers("Content-Type; application/json")]
-    public Task<ApiResponse<string>> DeleteGroupClientRolesAsync(
+    public Task<ApiResponse<string?>> DeleteGroupClientRolesAsync(
         [Header("Authorization")] string token,
         [AliasAs("realm")] string realm,
         [AliasAs("group_id")] Guid groupId,

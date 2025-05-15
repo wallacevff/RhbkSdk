@@ -1,128 +1,168 @@
-RhbkSdk
-========
+```
+# RhbkSdk
 
-O RhbkSdk é um SDK para .NET 8 que facilita a integração com a API RHBK — uma solução de gerenciamento de identidade baseada em OAuth2/OpenID Connect, com funcionalidades como gerenciamento de usuários, grupos e permissões.
+O **RhbkSdk** é um SDK para .NET 8 que facilita a integração com a API RHBK (Keycloak), oferecendo uma camada de abstração moderna com suporte a grupos, papéis, autenticação e gerenciamento de usuários.
 
---------------------------------------------------------------------------------
-📦 Injeção de Dependência
---------------------------------------------------------------------------------
+---
 
-Adicione o SDK ao seu WebApplicationBuilder:
+## 📦 Injeção de Dependência
 
-    using RhbkSdk.Extensions;
+Registre o SDK no seu `Program.cs`:
 
-    var builder = WebApplication.CreateBuilder(args);
-    builder.AddRhbkClient("https://api.seurhbk.com", ServiceLifetime.Scoped);
+```csharp
+using RhbkSdk.Extensions;
 
-O método AddRhbkClient registra o serviço IClientApi para uso via injeção de dependência.
+builder.AddRhbkClient("https://seu.keycloak.url", ServiceLifetime.Scoped);
+```
 
---------------------------------------------------------------------------------
-📘 Manual de Uso
---------------------------------------------------------------------------------
+---
 
-O serviço IClientApi encapsula chamadas HTTP para a API RHBK. Você pode injetá-lo normalmente:
+## ⚙️ Configuração por appsettings
 
-    public class MinhaClasse
+Recomendado usar a classe `RhbkConfiguration`:
+
+```json
+"RhbkConfiguration": {
+  "Realm": "meu-realm",
+  "ClientId": "client-id",
+  "ClientSecret": "segredo",
+  "KeycloakBaseUrl": "https://keycloak.meuservidor.com",
+  "RedirectUri": "https://meusite/callback"
+}
+```
+
+E carregar no startup:
+
+```csharp
+builder.Services.Configure<RhbkConfiguration>(
+    builder.Configuration.GetSection(RhbkConfiguration.ConfigurationSection));
+```
+
+---
+
+## 📘 Como Usar
+
+Você injeta a interface `IRhbkClient` diretamente:
+
+```csharp
+public class MeuServico
+{
+    private readonly IRhbkClient _rhbkClient;
+
+    public MeuServico(IRhbkClient rhbkClient)
     {
-        private readonly IClientApi _clientApi;
-
-        public MinhaClasse(IClientApi clientApi)
-        {
-            _clientApi = clientApi;
-        }
-
-        public async Task<IList<UserResponse>?> ObterUsuariosAsync()
-        {
-            return await _clientApi.GetUsersAsync("seu_token", "seu_realm");
-        }
+        _rhbkClient = rhbkClient;
     }
 
---------------------------------------------------------------------------------
-🧪 Exemplo Prático
---------------------------------------------------------------------------------
-
-    var tokenResponse = await _clientApi.GetTokenAsync("meu_realm", new GetTokenRequestBody
+    public async Task<IList<UserResponse>> BuscarUsuarios()
     {
-        ClientId = "app",
-        GrantType = GrantTypeOption.Password,
-        Username = "usuario",
-        Password = "senha"
-    });
+        var token = await _rhbkClient.GetTokenAsync("realm", new GetTokenRequestBody { ... });
+        var usuarios = await _rhbkClient.GetUsersAsync(token.Data?.AccessToken!, "realm");
 
-    var grupos = await _clientApi.GetGroupAsync(tokenResponse?.AccessToken!, "meu_realm");
+        return usuarios.Data ?? [];
+    }
+}
+```
 
---------------------------------------------------------------------------------
-📂 Models Disponíveis
---------------------------------------------------------------------------------
+---
 
-- Access
-- ClientResponse
-- GroupResponse
-- UserResponse
-- RoleResponse
-- RoleGroupMapping
-- GetTokenResponseBody
-- GroupCreateRequestBody
-- ClientRoleRequestBody
-- GroupRoleManagementRequestBody
+## 🧪 Retorno Padrão
 
---------------------------------------------------------------------------------
-📌 Métodos Suportados
---------------------------------------------------------------------------------
+Todas as chamadas assíncronas retornam:
 
-🔐 Token & Autenticação
-- GetTokenAsync
+```csharp
+DefaultResponseBody<T>
+```
 
-👥 Grupos
-- CreateGroupAsync
-- GetGroupAsync
-- GetSubGroupAsync
-- DeleteGroupOrSubGroupAsync
-- CreateSubGroupAsync
-- GetGroupMembersAsync
-- GetGroupMembersFromSubGroupsAsync
+Esse objeto inclui:
 
-🔑 Papéis (Roles)
-- GetClientRolesAsync
-- CreateClientRolesAsync
-- DeleteClientRolesAsync
-- GetGroupClientRolesAsync
-- CreateGroupClientRolesAsync
-- DeleteGroupClientRolesAsync
+- `StatusCode`: código HTTP da operação
+- `Data`: resultado da chamada, que pode ser nulo
 
-🧑‍💼 Usuários
-- GetUsersAsync
-- UserJoinGroupAsync
-- UserLeaveGroupAsync
+---
 
-🧩 Clientes
-- GetClientByNameAsync
+## 📂 Models disponíveis
 
---------------------------------------------------------------------------------
-🔗 Dependências
---------------------------------------------------------------------------------
+- `Access`
+- `ClientResponse`
+- `GroupResponse`
+- `UserResponse`
+- `RoleResponse`
+- `RoleGroupMapping`
+- `GetTokenResponseBody`
+- `GroupCreateRequestBody`
+- `ClientRoleRequestBody`
+- `GroupRoleManagementRequestBody`
+- `RhbkConfiguration`
 
-- Refit (v8.0.0) — cliente HTTP declarativo
-- Microsoft.Extensions.DependencyInjection.Abstractions (v8.0.2)
+---
 
---------------------------------------------------------------------------------
-💡 Sugestões Futuras
---------------------------------------------------------------------------------
+## ✅ Funcionalidades
 
-- Adicionar suporte a ILogger para logs
-- Adicionar documentação de endpoints em .http
-- Automatizar versionamento e publicação com GitHub Actions
-- Melhorar tratamento de erros de API e resposta
+### 🔐 Autenticação
+- `GetTokenAsync`
+- `GetLoginUrl`
+- `GetLogoutUrl`
+- `GetLoginProviderUrl`
 
---------------------------------------------------------------------------------
-📝 Licença
---------------------------------------------------------------------------------
+### 👥 Grupos
+- Criar grupos e subgrupos
+- Buscar todos os grupos ou subgrupos
+- Buscar membros
+- Adicionar/remover papéis de grupos
+- Deletar grupos
 
-Distribuído sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
+### 🧑‍💼 Usuários
+- Listar usuários
+- Adicionar usuário a grupo
+- Remover usuário de grupo
 
---------------------------------------------------------------------------------
-👨‍💻 Autor
---------------------------------------------------------------------------------
+### 🧩 Clientes
+- Buscar cliente por nome
+- Gerenciar papéis do cliente
 
-Desenvolvido por Wallace Vidal
-GitHub: https://github.com/wallacevff
+---
+
+## 🔗 Dependências
+
+- [Refit](https://www.nuget.org/packages/Refit) — cliente HTTP declarativo
+- [Microsoft.Extensions.DependencyInjection.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions)
+- [Microsoft.Extensions.Configuration](https://www.nuget.org/packages/Microsoft.Extensions.Configuration)
+
+---
+
+## 🚀 CI/CD Automatizado
+
+Este projeto possui pipeline com **GitHub Actions** que:
+
+- Compila
+- Empacota o `.nupkg`
+- Publica automaticamente no NuGet
+
+### Como publicar:
+
+1. Altere a versão no `csproj` (se necessário)
+2. Faça o commit
+3. Crie e envie uma tag:
+
+```bash
+git tag v8.0.2
+git push origin v8.0.2
+```
+
+O pacote será publicado com a versão `v8.0.2`.
+
+---
+
+## 📝 Licença
+
+Distribuído sob a licença MIT.  
+Consulte o arquivo [LICENSE.txt](./LICENSE.txt) para mais detalhes.
+
+---
+
+## 👨‍💻 Autor
+
+Desenvolvido por **Wallace Vidal de Figueiredo Fortuna**  
+[GitHub - wallacevff](https://github.com/wallacevff)
+```

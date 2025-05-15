@@ -11,17 +11,17 @@ public static class WebApplicationBuilderExtensions
         switch (lifetime)
         {
             case ServiceLifetime.Singleton:
-                IClientApi clientApi = new Providers.ClientApi(baseUrl);
-                builder.Services.AddSingleton<IClientApi>(clientApi);
+                IRhbkClient clientApi = new Providers.RhbkClient(baseUrl);
+                builder.Services.AddSingleton<IRhbkClient>(clientApi);
                 break;
             case ServiceLifetime.Scoped:
-                builder.Services.AddScoped<IClientApi, Providers.ClientApi>(provider => new Providers.ClientApi(baseUrl));
+                builder.Services.AddScoped<IRhbkClient, Providers.RhbkClient>(provider => new Providers.RhbkClient(baseUrl));
                 break;
             case ServiceLifetime.Transient:
-                builder.Services.AddTransient<IClientApi, Providers.ClientApi>(provider => new Providers.ClientApi(baseUrl));
+                builder.Services.AddTransient<IRhbkClient, Providers.RhbkClient>(provider => new Providers.RhbkClient(baseUrl));
                 break;
             default:
-                builder.Services.AddTransient<IClientApi, Providers.ClientApi>(provider => new Providers.ClientApi(baseUrl));
+                builder.Services.AddTransient<IRhbkClient, Providers.RhbkClient>(provider => new Providers.RhbkClient(baseUrl));
                 break;
         }
         return builder;
