@@ -1,115 +1,128 @@
-# RhbkSdk
+RhbkSdk
+========
 
-Bem-vindo ao **RhbkSdk**, um SDK desenvolvido para integrar aplicações com a API RHBK de forma simples e eficiente.
+O RhbkSdk é um SDK para .NET 8 que facilita a integração com a API RHBK — uma solução de gerenciamento de identidade baseada em OAuth2/OpenID Connect, com funcionalidades como gerenciamento de usuários, grupos e permissões.
 
-## Visão Geral
+--------------------------------------------------------------------------------
+📦 Injeção de Dependência
+--------------------------------------------------------------------------------
 
-O **RhbkSdk** foi projetado para facilitar a comunicação com a API RHBK, fornecendo uma interface abstraída para desenvolvedores, com suporte à injeção de dependência e uso de ferramentas populares.
+Adicione o SDK ao seu WebApplicationBuilder:
 
-### Principais Funcionalidades
+    using RhbkSdk.Extensions;
 
-- Comunicação simplificada com a API RHBK.
-- Baseado em **.NET 8.0**, com suporte às features mais recentes.
-- Utilização de **Refit** para criação de clientes HTTP desacoplados.
-- Suporte nativo à Injeção de Dependência com **Microsoft.Extensions.DependencyInjection**.
+    var builder = WebApplication.CreateBuilder(args);
+    builder.AddRhbkClient("https://api.seurhbk.com", ServiceLifetime.Scoped);
 
----
+O método AddRhbkClient registra o serviço IClientApi para uso via injeção de dependência.
 
-## Requisitos
+--------------------------------------------------------------------------------
+📘 Manual de Uso
+--------------------------------------------------------------------------------
 
-### Para utilizar este SDK, você precisa:
+O serviço IClientApi encapsula chamadas HTTP para a API RHBK. Você pode injetá-lo normalmente:
 
-- **.NET 8.0 ou superior**
-- Gerenciador de pacotes NuGet para adicionar este SDK ao seu projeto.
-
----
-
-## Como Instalar
-
-O SDK está disponível no NuGet. Para instalá-lo no seu projeto, use o seguinte comando:
-
-```bash
-dotnet add package RhbkSdk --version 1.0.0
-```
-
-Ou adicione diretamente no arquivo `csproj` do seu projeto:
-
-```xml
-<PackageReference Include="RhbkSdk" Version="1.0.0" />
-```
-
----
-
-## Como Usar
-
-### Configuração Básica
-
-Antes de usar, certifique-se de configurar a Injeção de Dependência do SDK em seu projeto.
-
-#### Exemplo de Configuração:
-
-```csharp
-using RhbkSdk.Extensions;
-
-builder.AddRhbkClient("https://rhbk.url.com", ServiceLifetime.Scoped);
-
-```
-
-### Implementação no Projeto
-
-Após configurar a injeção de dependência, você pode injetar e começar a utilizar os serviços fornecidos pelo **RhbkSdk**:
-
-```csharp
-public class MyService
-{
-    private readonly IRhbkApi _rhbkApi;
-
-    public MyService(IRhbkApi rhbkApi)
+    public class MinhaClasse
     {
-        _rhbkApi = rhbkApi;
+        private readonly IClientApi _clientApi;
+
+        public MinhaClasse(IClientApi clientApi)
+        {
+            _clientApi = clientApi;
+        }
+
+        public async Task<IList<UserResponse>?> ObterUsuariosAsync()
+        {
+            return await _clientApi.GetUsersAsync("seu_token", "seu_realm");
+        }
     }
 
-    public async Task<List<User>> GetUsersAsync()
+--------------------------------------------------------------------------------
+🧪 Exemplo Prático
+--------------------------------------------------------------------------------
+
+    var tokenResponse = await _clientApi.GetTokenAsync("meu_realm", new GetTokenRequestBody
     {
-        return await _rhbkApi.GetUsersAsync();
-    }
-}
-```
+        ClientId = "app",
+        GrantType = GrantTypeOption.Password,
+        Username = "usuario",
+        Password = "senha"
+    });
 
----
+    var grupos = await _clientApi.GetGroupAsync(tokenResponse?.AccessToken!, "meu_realm");
 
-## Dependências Principais
+--------------------------------------------------------------------------------
+📂 Models Disponíveis
+--------------------------------------------------------------------------------
 
-- [Microsoft.Extensions.DependencyInjection.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) (8.0.2): Para suporte à injeção de dependência.
-- [Refit](https://www.nuget.org/packages/Refit) (8.0.0): Para criação e consumo de APIs RESTful.
+- Access
+- ClientResponse
+- GroupResponse
+- UserResponse
+- RoleResponse
+- RoleGroupMapping
+- GetTokenResponseBody
+- GroupCreateRequestBody
+- ClientRoleRequestBody
+- GroupRoleManagementRequestBody
 
----
+--------------------------------------------------------------------------------
+📌 Métodos Suportados
+--------------------------------------------------------------------------------
 
-## Contribuindo
+🔐 Token & Autenticação
+- GetTokenAsync
 
-Contribuições são bem-vindas! Siga os passos abaixo para contribuir:
+👥 Grupos
+- CreateGroupAsync
+- GetGroupAsync
+- GetSubGroupAsync
+- DeleteGroupOrSubGroupAsync
+- CreateSubGroupAsync
+- GetGroupMembersAsync
+- GetGroupMembersFromSubGroupsAsync
 
-1. Faça um **fork** do repositório.
-2. Crie uma nova branch com sua feature: `git checkout -b minha-feature`.
-3. Faça o commit das suas alterações: `git commit -m 'Adicionar minha nova feature'`.
-4. Submeta sua branch: `git push origin minha-feature`.
-5. Abra um Pull Request para revisão.
+🔑 Papéis (Roles)
+- GetClientRolesAsync
+- CreateClientRolesAsync
+- DeleteClientRolesAsync
+- GetGroupClientRolesAsync
+- CreateGroupClientRolesAsync
+- DeleteGroupClientRolesAsync
 
----
+🧑‍💼 Usuários
+- GetUsersAsync
+- UserJoinGroupAsync
+- UserLeaveGroupAsync
 
-## Licença
+🧩 Clientes
+- GetClientByNameAsync
 
-O **RhbkSdk** é distribuído sob a licença MIT. Consulte o arquivo [LICENSE](./LICENSE) para mais detalhes.
+--------------------------------------------------------------------------------
+🔗 Dependências
+--------------------------------------------------------------------------------
 
----
+- Refit (v8.0.0) — cliente HTTP declarativo
+- Microsoft.Extensions.DependencyInjection.Abstractions (v8.0.2)
 
-## Autor
+--------------------------------------------------------------------------------
+💡 Sugestões Futuras
+--------------------------------------------------------------------------------
 
-- **Wallace Vidal**  
-  Para dúvidas ou sugestões, entre em contato pelo [GitHub](https://github.com/seu-usuario-aqui).
+- Adicionar suporte a ILogger para logs
+- Adicionar documentação de endpoints em .http
+- Automatizar versionamento e publicação com GitHub Actions
+- Melhorar tratamento de erros de API e resposta
 
----
+--------------------------------------------------------------------------------
+📝 Licença
+--------------------------------------------------------------------------------
 
-## Observações
+Distribuído sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
 
-Certifique-se de sempre acompanhar as atualizações da API RHBK para garantir a compatibilidade do SDK com a versão mais recente.
+--------------------------------------------------------------------------------
+👨‍💻 Autor
+--------------------------------------------------------------------------------
+
+Desenvolvido por Wallace Vidal
+GitHub: https://github.com/wallacevff

@@ -1,0 +1,32 @@
+name: 📦 Publish NuGet Package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Ex: v1.0.0
+
+jobs:
+  publish:
+    name: Publish to NuGet
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔄 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: 📦 Restore dependencies
+        run: dotnet restore
+
+      - name: 🛠️ Build project
+        run: dotnet build --configuration Release --no-restore
+
+      - name: 📦 Pack NuGet package
+        run: dotnet pack --configuration Release --no-build --output ./artifacts
+
+      - name: 🚀 Publish to NuGet
+        run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
