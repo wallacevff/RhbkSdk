@@ -7,11 +7,9 @@ on:
 
 jobs:
   publish:
-    name: Publish to NuGet
     runs-on: ubuntu-latest
-
     steps:
-      - name: 🔄 Checkout code
+      - name: 🔄 Checkout
         uses: actions/checkout@v4
 
       - name: ⚙️ Setup .NET SDK
@@ -19,14 +17,18 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: 📦 Restore dependencies
+      - name: 📦 Restore
         run: dotnet restore
 
-      - name: 🛠️ Build project
+      - name: 🛠️ Build
         run: dotnet build --configuration Release --no-restore
 
-      - name: 📦 Pack NuGet package
-        run: dotnet pack --configuration Release --no-build --output ./artifacts
-      
+      - name: 📦 Pack com versão da tag (sem 'v')
+        run: |
+          VERSION=${GITHUB_REF##*/}
+          VERSION=${VERSION#v}
+          echo "📦 Empacotando pacote com versão: $VERSION"
+          dotnet pack --configuration Release --no-build --output ./artifacts /p:Version=$VERSION
+
       - name: 🚀 Publish to NuGet
-        run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push ./artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
