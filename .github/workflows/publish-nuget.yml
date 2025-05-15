@@ -3,7 +3,7 @@ name: 📦 Publish NuGet Package
 on:
   push:
     tags:
-      - 'v*.*.*'  # Ex: v1.0.0
+      - '*.*.*'  # Ex: v1.0.0
 
 jobs:
   publish:
