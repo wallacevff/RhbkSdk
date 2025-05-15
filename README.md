@@ -1,4 +1,4 @@
-```
+
 # RhbkSdk
 
 O **RhbkSdk** é um SDK para .NET 8 que facilita a integração com a API RHBK (Keycloak), oferecendo uma camada de abstração moderna com suporte a grupos, papéis, autenticação e gerenciamento de usuários.
