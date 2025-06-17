@@ -48,7 +48,7 @@ public class RhbkClient : IRhbkClient
         return new DefaultResponseBody<string>()
         {
             StatusCode = 200,
-            Data = $"{GetLoginUrl(realm)}?client_id={clientId}&response_type=code&redirect_uri={redirectUri}"
+            Data = $"{GetLoginUrl(realm).Data}?client_id={clientId}&response_type=code&redirect_uri={redirectUri}"
         };
     }
 
