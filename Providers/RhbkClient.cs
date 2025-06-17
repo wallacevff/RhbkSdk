@@ -285,7 +285,10 @@ public class RhbkClient : IRhbkClient
     private void CaptureException<T>(ApiResponse<T> ex)
     {
         if(!ex.IsSuccessStatusCode && ex.Error != null)
-            throw new Exception(ex.Error?.Message);
+        {
+            var messageFromRequest = ex.Error.Content ?? string.Empty;
+            throw new Exception($"{ex.Error?.Message}\r\n{messageFromRequest}");
+        }
     }
     
     private DefaultResponseBody<T> GenResponse<T>(ApiResponse<T> response){
