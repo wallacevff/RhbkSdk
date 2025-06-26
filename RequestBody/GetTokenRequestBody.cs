@@ -6,12 +6,13 @@ public class GetTokenRequestBody
 {
     [AliasAs("grant_type")] public string GrantType { get; set; } = "authorization_code";
     [AliasAs("code")] public string Code { get; set; } = string.Empty;
-    [AliasAs("client_id")] public string ClientId { get; set; } = "talonario";
-    [AliasAs("client_secret")] public string ClientSecret { get; set; } = "jHY62XsEsY4gzckNfCcrXbyaN8Uk4Elb";
-    [AliasAs("redirect_uri")] public string RedirectUri { get; set; } = "http://localhost:5255/Tests/Callback";
-    [AliasAs("username")] public string? UserName { get; set; } = "user";
-    [AliasAs("password")] public string? Password { get; set; } = "123";
-    [AliasAs("refresh_token")] public string? RefreshToken { get; set; } = "123";
+    [AliasAs("client_id")] public string ClientId { get; set; } = "";
+    [AliasAs("client_secret")] public string ClientSecret { get; set; } = "";
+    [AliasAs("redirect_uri")] public string RedirectUri { get; set; } = "";
+    [AliasAs("username")] public string? UserName { get; set; } = "";
+    [AliasAs("password")] public string? Password { get; set; } = "";
+    [AliasAs("refresh_token")] public string? RefreshToken { get; set; } = "";
+    [AliasAs("scope")] public string? Scope { get; set; } = "openid email profile";
 
     public GetTokenRequestBody()
     {
