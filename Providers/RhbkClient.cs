@@ -101,11 +101,20 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
+    public async Task<DefaultResponseBody<string>> LogoffAsync(string realm, LogoffRequestBody requestBody)
+    {
+        var body = requestBody.ToDictionary();
+        var result = await _clientApi.LogoffAsync(realm, body);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
     #endregion
 
     #region Group Methods
 
-    public async Task<DefaultResponseBody<string?>> CreateGroupAsync(string token, string realm, GroupCreateRequestBody body,
+    public async Task<DefaultResponseBody<string?>> CreateGroupAsync(string token, string realm,
+        GroupCreateRequestBody body,
         CancellationToken cancellationToken = default)
     {
         var result = await _clientApi.CreateGroupAsync($"Bearer {token}", realm, body, cancellationToken);
@@ -113,7 +122,8 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
-    public async Task<DefaultResponseBody<IList<GroupResponse>?>> GetGroupAsync(string token, string realm, Params? queryParams = null,
+    public async Task<DefaultResponseBody<IList<GroupResponse>?>> GetGroupAsync(string token, string realm,
+        Params? queryParams = null,
         CancellationToken cancellationToken = default)
     {
         var result = await _clientApi.GetAllGroupAsync($"Bearer {token}", realm, queryParams, cancellationToken);
@@ -129,7 +139,8 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
-    public async Task<DefaultResponseBody<IList<GroupResponse>?>> GetSubGroupAsync(string token, string realm, Guid groupId,
+    public async Task<DefaultResponseBody<IList<GroupResponse>?>> GetSubGroupAsync(string token, string realm,
+        Guid groupId,
         Params? queryParams = null, CancellationToken cancellationToken = default)
     {
         var result =
@@ -138,7 +149,8 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
-    public async Task<DefaultResponseBody<IList<RoleGroupMapping>?>> GetGroupClientRolesAsync(string token, string realm, Guid groupId,
+    public async Task<DefaultResponseBody<IList<RoleGroupMapping>?>> GetGroupClientRolesAsync(string token,
+        string realm, Guid groupId,
         Guid clientId, Params? queryParams = null, CancellationToken cancellationToken = default)
     {
         var result = await _clientApi.GetGroupClientRolesAsync($"Bearer {token}", realm, groupId, clientId, queryParams,
@@ -147,7 +159,8 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
-    public async Task<DefaultResponseBody<IList<UserResponse>?>> GetGroupMembersAsync(string token, string realm, Guid groupId,
+    public async Task<DefaultResponseBody<IList<UserResponse>?>> GetGroupMembersAsync(string token, string realm,
+        Guid groupId,
         Params? queryParams = null, CancellationToken cancellationToken = default)
     {
         var result =
@@ -156,7 +169,8 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
-    public async Task<DefaultResponseBody<IList<UserResponse>>> GetGroupMembersFromSubGroupsAsync(string token, string realm, Guid groupId,
+    public async Task<DefaultResponseBody<IList<UserResponse>>> GetGroupMembersFromSubGroupsAsync(string token,
+        string realm, Guid groupId,
         Params? queryParams = null, CancellationToken cancellationToken = default)
     {
         List<UserResponse> result = new List<UserResponse>();
@@ -188,7 +202,8 @@ public class RhbkClient : IRhbkClient
         };
     }
 
-    public async Task<DefaultResponseBody<IList<UserResponse>?>> DeleteGroupOrSubGroupAsync(string token, string realm, Guid groupId,
+    public async Task<DefaultResponseBody<IList<UserResponse>?>> DeleteGroupOrSubGroupAsync(string token, string realm,
+        Guid groupId,
         CancellationToken cancellationToken = default)
     {
         var result = await _clientApi.DeleteGroupAsync($"Bearer {token}", realm, groupId, cancellationToken);
@@ -196,7 +211,8 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
-    public async Task<DefaultResponseBody<string?>> CreateGroupClientRolesAsync(string token, string realm, Guid groupId, Guid clientId,
+    public async Task<DefaultResponseBody<string?>> CreateGroupClientRolesAsync(string token, string realm,
+        Guid groupId, Guid clientId,
         IList<RoleGroupMapping> roles, CancellationToken cancellationToken = default)
     {
         var result = await _clientApi.CreateGroupClientRolesAsync($"Bearer {token}", realm, groupId, clientId, roles,
@@ -205,7 +221,8 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
-    public async Task<DefaultResponseBody<string?>> DeleteGroupClientRolesAsync(string token, string realm, Guid groupId, Guid clientId,
+    public async Task<DefaultResponseBody<string?>> DeleteGroupClientRolesAsync(string token, string realm,
+        Guid groupId, Guid clientId,
         IList<RoleGroupMapping> roles, CancellationToken cancellationToken = default)
     {
         var result = await _clientApi.DeleteGroupClientRolesAsync($"Bearer {token}", realm, groupId, clientId, roles,
@@ -218,7 +235,8 @@ public class RhbkClient : IRhbkClient
 
     #region Client Methods
 
-    public async Task<DefaultResponseBody<IList<RoleResponse>?>> GetClientRolesAsync(string token, string realm, Guid clientId,
+    public async Task<DefaultResponseBody<IList<RoleResponse>?>> GetClientRolesAsync(string token, string realm,
+        Guid clientId,
         Params? queryParams = null)
     {
         var result = await _clientApi.GetClientRolesAsync($"Bearer {token}", realm, clientId, queryParams);
@@ -244,7 +262,8 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
-    public async Task<DefaultResponseBody<IList<ClientResponse>?>> GetClientByNameAsync(string token, string realm, string clientName,
+    public async Task<DefaultResponseBody<IList<ClientResponse>?>> GetClientByNameAsync(string token, string realm,
+        string clientName,
         CancellationToken cancellationToken = default)
     {
         var result = await _clientApi.GetClientByNameAsync($"Bearer {token}", realm, clientName, cancellationToken);
@@ -256,7 +275,8 @@ public class RhbkClient : IRhbkClient
 
     #region User Methods
 
-    public async Task<DefaultResponseBody<IList<UserResponse>?>> GetUsersAsync(string token, string realm, Params? queryParams = null,
+    public async Task<DefaultResponseBody<IList<UserResponse>?>> GetUsersAsync(string token, string realm,
+        Params? queryParams = null,
         CancellationToken cancellationToken = default)
     {
         var result = await _clientApi.GetUsersAsync($"Bearer {token}", realm, queryParams, cancellationToken);
@@ -264,7 +284,8 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
-    public async Task<DefaultResponseBody<string?>> UserJoinGroupAsync(string token, string realm, Guid userId, Guid groupId,
+    public async Task<DefaultResponseBody<string?>> UserJoinGroupAsync(string token, string realm, Guid userId,
+        Guid groupId,
         CancellationToken cancellationToken = default)
     {
         var result = await _clientApi.UserJoinGroupAsync($"Bearer {token}", realm, userId, groupId, cancellationToken);
@@ -272,7 +293,8 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
-    public async Task<DefaultResponseBody<string?>> UserLeaveGroupAsync(string token, string realm, Guid userId, Guid groupId,
+    public async Task<DefaultResponseBody<string?>> UserLeaveGroupAsync(string token, string realm, Guid userId,
+        Guid groupId,
         CancellationToken cancellationToken = default)
     {
         var result = await _clientApi.UserLeaveGroupAsync($"Bearer {token}", realm, userId, groupId, cancellationToken);
@@ -281,17 +303,18 @@ public class RhbkClient : IRhbkClient
     }
 
     #endregion
-    
+
     private void CaptureException<T>(ApiResponse<T> ex)
     {
-        if(!ex.IsSuccessStatusCode && ex.Error != null)
+        if (!ex.IsSuccessStatusCode && ex.Error != null)
         {
             var messageFromRequest = ex.Error.Content ?? string.Empty;
             throw new Exception($"{ex.Error?.Message}\r\n{messageFromRequest}");
         }
     }
-    
-    private DefaultResponseBody<T> GenResponse<T>(ApiResponse<T> response){
+
+    private DefaultResponseBody<T> GenResponse<T>(ApiResponse<T> response)
+    {
         return new DefaultResponseBody<T>()
         {
             StatusCode = (int)response.StatusCode,
