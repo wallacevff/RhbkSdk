@@ -12,7 +12,7 @@ public class GetTokenRequestBody
     [AliasAs("username")] public string? UserName { get; set; } = "";
     [AliasAs("password")] public string? Password { get; set; } = "";
     [AliasAs("refresh_token")] public string? RefreshToken { get; set; } = "";
-    [AliasAs("scope")] public string? Scope { get; set; } = "openid email profile";
+    [AliasAs("scope")] public string? Scope { get; set; } = "openid";
 
     public GetTokenRequestBody()
     {

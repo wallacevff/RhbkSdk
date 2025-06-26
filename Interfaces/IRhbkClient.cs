@@ -8,7 +8,11 @@ namespace RhbkSdk.Interfaces;
 public interface IRhbkClient
 {
     public DefaultResponseBody<string> GetLoginUrl(string realm);
-    public DefaultResponseBody<string> GetLoginProviderUrl(string realm, string clientId, string redirectUri);
+    public DefaultResponseBody<string> GetLoginProviderUrl(
+        string realm, 
+        string clientId,
+        string redirectUri,
+        string scope = "openid email profile");
     public DefaultResponseBody<string> GetTokenUrl(string realm);
     public DefaultResponseBody<string> GetUserInfoUrl(string realm);
     public DefaultResponseBody<string> GetLogoutUrl(string realm, string token, string url);
