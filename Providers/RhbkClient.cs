@@ -70,12 +70,12 @@ public class RhbkClient : IRhbkClient
         };
     }
 
-    public DefaultResponseBody<string> GetLogoutUrl(string realm)
+    public DefaultResponseBody<string> GetLogoutUrl(string realm, string token, string url)
     {
         return new DefaultResponseBody<string>()
         {
             StatusCode = 200,
-            Data = $"{_baseUrl}/realms/{realm}/protocol/openid-connect/logout"
+            Data = $"{_baseUrl}/realms/{realm}/protocol/openid-connect/logout?id_token_hint={token}&post_logout_redirect_uri={url}"
         };
     }
 

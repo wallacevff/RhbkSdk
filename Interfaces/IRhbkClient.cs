@@ -11,7 +11,7 @@ public interface IRhbkClient
     public DefaultResponseBody<string> GetLoginProviderUrl(string realm, string clientId, string redirectUri);
     public DefaultResponseBody<string> GetTokenUrl(string realm);
     public DefaultResponseBody<string> GetUserInfoUrl(string realm);
-    public DefaultResponseBody<string> GetLogoutUrl(string realm);
+    public DefaultResponseBody<string> GetLogoutUrl(string realm, string token, string url);
     public DefaultResponseBody<string> GetGroupsUrl(string realm);
 
     public Task<DefaultResponseBody<GetTokenResponseBody?>> GetTokenAsync(string realm, GetTokenRequestBody body,
