@@ -66,6 +66,8 @@ public interface IRhbkClient
     public Task<DefaultResponseBody<string?>> UserJoinGroupAsync(string token, string realm, Guid userId, Guid groupId,
         CancellationToken cancellationToken = default);
 
-    Task<DefaultResponseBody<string?>> UserLeaveGroupAsync(string token, string realm, Guid userId, Guid groupId,
+    public Task<DefaultResponseBody<string?>> UserLeaveGroupAsync(string token, string realm, Guid userId, Guid groupId,
         CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<string>> LogoffAsync(string realm, LogoffRequestBody requestBody);
 }
