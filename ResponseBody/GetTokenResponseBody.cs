@@ -27,4 +27,7 @@ public class GetTokenResponseBody
 
     [JsonPropertyName("scope")]
     public string? Scope { get; set; }
+    
+    [JsonPropertyName("id_token")]
+    public string? TokenId { get; set; }
 }

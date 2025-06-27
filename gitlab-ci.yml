@@ -1,0 +1,4 @@
+include:
+  - project: 'ses-rj/ci-cd/pipelines'
+    ref: main
+    file: 'simple-ci/manifests/v1/v1.yml'

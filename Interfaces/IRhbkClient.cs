@@ -8,10 +8,14 @@ namespace RhbkSdk.Interfaces;
 public interface IRhbkClient
 {
     public DefaultResponseBody<string> GetLoginUrl(string realm);
-    public DefaultResponseBody<string> GetLoginProviderUrl(string realm, string clientId, string redirectUri);
+    public DefaultResponseBody<string> GetLoginProviderUrl(
+        string realm, 
+        string clientId,
+        string redirectUri,
+        string scope = "openid email profile");
     public DefaultResponseBody<string> GetTokenUrl(string realm);
     public DefaultResponseBody<string> GetUserInfoUrl(string realm);
-    public DefaultResponseBody<string> GetLogoutUrl(string realm);
+    public DefaultResponseBody<string> GetLogoutUrl(string realm, string token, string url);
     public DefaultResponseBody<string> GetGroupsUrl(string realm);
 
     public Task<DefaultResponseBody<GetTokenResponseBody?>> GetTokenAsync(string realm, GetTokenRequestBody body,
@@ -66,6 +70,8 @@ public interface IRhbkClient
     public Task<DefaultResponseBody<string?>> UserJoinGroupAsync(string token, string realm, Guid userId, Guid groupId,
         CancellationToken cancellationToken = default);
 
-    Task<DefaultResponseBody<string?>> UserLeaveGroupAsync(string token, string realm, Guid userId, Guid groupId,
+    public Task<DefaultResponseBody<string?>> UserLeaveGroupAsync(string token, string realm, Guid userId, Guid groupId,
         CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<string>> LogoffAsync(string realm, LogoffRequestBody requestBody);
 }

@@ -13,4 +13,11 @@ public partial interface IRhbkClientApi
         [Body(BodySerializationMethod.UrlEncoded)] GetTokenRequestBody body,
         CancellationToken cancellationToken = default
     );
+    
+    [Post("/realms/{realm}/protocol/openid-connect/logout")]
+    [Headers("Content-Type: application/x-www-form-urlencoded")]
+    Task<ApiResponse<string>> LogoffAsync(
+        [AliasAs("realm")] string realm,
+        [Body(BodySerializationMethod.UrlEncoded)] Dictionary<string, string> body
+    );
 }
