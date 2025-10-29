@@ -8,11 +8,13 @@ namespace RhbkSdk.Interfaces;
 public interface IRhbkClient
 {
     public DefaultResponseBody<string> GetLoginUrl(string realm);
+
     public DefaultResponseBody<string> GetLoginProviderUrl(
-        string realm, 
+        string realm,
         string clientId,
         string redirectUri,
-        string scope = "openid email profile");
+        string scope = "openid email profile sign");
+
     public DefaultResponseBody<string> GetTokenUrl(string realm);
     public DefaultResponseBody<string> GetUserInfoUrl(string realm);
     public DefaultResponseBody<string> GetLogoutUrl(string realm, string token, string url);
@@ -26,45 +28,57 @@ public interface IRhbkClient
 
     public Task<DefaultResponseBody<string?>> CreateSubGroupAsync(string token, string realm, Guid groupId,
         GroupCreateRequestBody body, CancellationToken cancellationToken = default);
-    
-    public Task<DefaultResponseBody<IList<GroupResponse>?>> GetGroupAsync(string token, string realm, Params? queryParams = null,
+
+    public Task<DefaultResponseBody<IList<GroupResponse>?>> GetGroupAsync(string token, string realm,
+        Params? queryParams = null,
         CancellationToken cancellationToken = default);
 
     public Task<DefaultResponseBody<IList<GroupResponse>?>> GetSubGroupAsync(string token, string realm, Guid groupId,
         Params? queryParams = null, CancellationToken cancellationToken = default);
 
-    public Task<DefaultResponseBody<IList<RoleGroupMapping>?>> GetGroupClientRolesAsync(string token, string realm, Guid groupId,
+    public Task<DefaultResponseBody<IList<RoleGroupMapping>?>> GetGroupClientRolesAsync(string token, string realm,
+        Guid groupId,
         Guid clientId,
         Params? queryParams = null, CancellationToken cancellationToken = default);
 
-    public Task<DefaultResponseBody<IList<UserResponse>?>> GetGroupMembersAsync(string token, string realm, Guid groupId,
+    public Task<DefaultResponseBody<IList<UserResponse>?>> GetGroupMembersAsync(string token, string realm,
+        Guid groupId,
         Params? queryParams = null, CancellationToken cancellationToken = default);
 
-    public Task<DefaultResponseBody<IList<UserResponse>>> GetGroupMembersFromSubGroupsAsync(string token, string realm, Guid groupId,
+    public Task<DefaultResponseBody<IList<UserResponse>>> GetGroupMembersFromSubGroupsAsync(string token, string realm,
+        Guid groupId,
         Params? queryParams = null, CancellationToken cancellationToken = default);
 
-    public Task<DefaultResponseBody<IList<UserResponse>?>> DeleteGroupOrSubGroupAsync(string token, string realm, Guid groupId,
+    public Task<DefaultResponseBody<IList<UserResponse>?>> DeleteGroupOrSubGroupAsync(string token, string realm,
+        Guid groupId,
         CancellationToken cancellationToken = default);
 
-    public Task<DefaultResponseBody<string?>> CreateGroupClientRolesAsync(string token, string realm, Guid groupId, Guid clientId,
+    public Task<DefaultResponseBody<string?>> CreateGroupClientRolesAsync(string token, string realm, Guid groupId,
+        Guid clientId,
         IList<RoleGroupMapping> roles, CancellationToken cancellationToken = default);
 
-    public Task<DefaultResponseBody<string?>> DeleteGroupClientRolesAsync(string token, string realm, Guid groupId, Guid clientId,
+    public Task<DefaultResponseBody<string?>> DeleteGroupClientRolesAsync(string token, string realm, Guid groupId,
+        Guid clientId,
         IList<RoleGroupMapping> roles, CancellationToken cancellationToken = default);
 
 
-    public Task<DefaultResponseBody<IList<RoleResponse>?>> GetClientRolesAsync(string token, string realm, Guid clientId,
+    public Task<DefaultResponseBody<IList<RoleResponse>?>> GetClientRolesAsync(string token, string realm,
+        Guid clientId,
         Params? queryParams = null);
 
-    public Task<DefaultResponseBody<string?>> CreateClientRolesAsync(string token, string realm, Guid clientId, RoleCreateRequestBody body);
+    public Task<DefaultResponseBody<string?>> CreateClientRolesAsync(string token, string realm, Guid clientId,
+        RoleCreateRequestBody body);
 
-    public Task<DefaultResponseBody<string?>> DeleteClientRolesAsync(string token, string realm, Guid clientId, string roleName,
+    public Task<DefaultResponseBody<string?>> DeleteClientRolesAsync(string token, string realm, Guid clientId,
+        string roleName,
         CancellationToken cancellationToken = default);
 
-    public Task<DefaultResponseBody<IList<ClientResponse>?>> GetClientByNameAsync(string token, string realm, string clientName,
+    public Task<DefaultResponseBody<IList<ClientResponse>?>> GetClientByNameAsync(string token, string realm,
+        string clientName,
         CancellationToken cancellationToken = default);
 
-    public Task<DefaultResponseBody<IList<UserResponse>?>> GetUsersAsync(string token, string realm, Params? queryParams = null,
+    public Task<DefaultResponseBody<IList<UserResponse>?>> GetUsersAsync(string token, string realm,
+        Params? queryParams = null,
         CancellationToken cancellationToken = default);
 
     public Task<DefaultResponseBody<string?>> UserJoinGroupAsync(string token, string realm, Guid userId, Guid groupId,
@@ -74,4 +88,16 @@ public interface IRhbkClient
         CancellationToken cancellationToken = default);
 
     public Task<DefaultResponseBody<string>> LogoffAsync(string realm, LogoffRequestBody requestBody);
+
+    public Task<DefaultResponseBody<List<GroupResponse>>> UserGetGroupsByParentGroupAsync(string token, string realm,
+        Guid userId,
+        Guid groupId,
+        CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<List<GroupResponse>?>> UserGetGroupsAsync(string token, string realm, Guid userId,
+        CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<bool>> UserIsInGroupAsync(string token, string realm, Guid userId,
+        Guid groupId,
+        CancellationToken cancellationToken = default);
 }

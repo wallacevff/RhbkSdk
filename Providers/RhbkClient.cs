@@ -302,6 +302,40 @@ public class RhbkClient : IRhbkClient
         CaptureException(result);
         return GenResponse(result);
     }
+    
+    public async Task<DefaultResponseBody<List<GroupResponse>?>> UserGetGroupsAsync(string token, string realm, Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.UserGetGroupsAsync($"Bearer {token}", realm, userId, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<List<GroupResponse>>> UserGetGroupsByParentGroupAsync(string token, string realm, Guid userId,
+        Guid groupId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await UserGetGroupsAsync(token, realm, userId, cancellationToken);
+        var finteredResult = result!.Data!.Where(x => x.ParentId == groupId).ToList();
+        return new DefaultResponseBody<List<GroupResponse>>
+        {
+            Data = finteredResult,
+            StatusCode = 200
+        };
+    }
+    
+    public async Task<DefaultResponseBody<bool>> UserIsInGroupAsync(string token, string realm, Guid userId,
+        Guid groupId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await UserGetGroupsByParentGroupAsync(token, realm, userId, groupId, cancellationToken);
+        var isInGroup = result.Data!.Any(x => x.Id == groupId);
+        return new DefaultResponseBody<bool>
+        {
+            Data = isInGroup,
+            StatusCode = 200
+        };
+    }
 
     #endregion
 
