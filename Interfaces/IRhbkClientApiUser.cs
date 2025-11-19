@@ -44,4 +44,12 @@ public partial interface IRhbkClientApi
         CancellationToken cancellationToken = default
     );
     
+    [Post("/admin/realms/{realm}/users")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<UserResponse>> CreateUserAsync(
+        [Header("Authorization")] string adminToken,
+        [AliasAs("realm")]string realm,
+        [Body] UserResponse userResponse,
+        CancellationToken cancellationToken = default
+    );
 }

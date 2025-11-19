@@ -337,6 +337,13 @@ public class RhbkClient : IRhbkClient
         };
     }
 
+    public async Task<DefaultResponseBody<UserResponse>> CreateUserAsync(string adminToken, string realm, UserResponse userInfo, CancellationToken cancellationToken)
+    {
+        var result = await _clientApi.CreateUserAsync($"Bearer {adminToken}", realm, userInfo, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
     #endregion
 
     private void CaptureException<T>(ApiResponse<T> ex)
