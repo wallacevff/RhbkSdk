@@ -35,4 +35,13 @@ public partial interface IRhbkClientApi
         CancellationToken cancellationToken = default
     );
     
+    [Get("/admin/realms/{realm}/users/{userId}/groups")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<List<GroupResponse>?>> UserGetGroupsAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("userId")] Guid clientId,
+        CancellationToken cancellationToken = default
+    );
+    
 }
