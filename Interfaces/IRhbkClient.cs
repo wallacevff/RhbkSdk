@@ -89,6 +89,9 @@ public interface IRhbkClient
 
     public Task<DefaultResponseBody<string>> LogoffAsync(string realm, LogoffRequestBody requestBody);
 
+    public Task<DefaultResponseBody<UserResponse>> CreateUserAsync(string adminToken, string realm,
+        UserResponse userInfo, CancellationToken cancellationToken);
+
     public Task<DefaultResponseBody<List<GroupResponse>>> UserGetGroupsByParentGroupAsync(string token, string realm,
         Guid userId,
         Guid groupId,
