@@ -11,4 +11,6 @@ public class RhbkConfiguration
     [ConfigurationKeyName("ClientSecret")] public string ClientSecret { get; set; } = string.Empty;
     [ConfigurationKeyName("KeycloakBaseUrl")] public string KeycloakBaseUrl { get; set; } = string.Empty;
     [ConfigurationKeyName("RedirectUri")] public string RedirectUri { get; set; } = string.Empty;
+    [ConfigurationKeyName("AdminUsername")] public string AdminUsername { get; set; } = string.Empty;
+    [ConfigurationKeyName("AdminPassword")] public string AdminPassword { get; set; } = string.Empty;
 }
