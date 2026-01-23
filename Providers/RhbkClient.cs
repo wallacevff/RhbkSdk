@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Refit;
+using RhbkSdk.Exceptions;
 using RhbkSdk.Interfaces;
 using RhbkSdk.Models;
 using RhbkSdk.RequestBody;
@@ -351,7 +352,9 @@ public class RhbkClient : IRhbkClient
         if (!ex.IsSuccessStatusCode && ex.Error != null)
         {
             var messageFromRequest = ex.Error.Content ?? string.Empty;
-            throw new Exception($"{ex.Error?.Message}\r\n{messageFromRequest}");
+            throw new RhbkSdkDefaultException(
+                (int)ex.StatusCode,
+                $"{ex.Error?.Message}\r\n{messageFromRequest}");
         }
     }
 
