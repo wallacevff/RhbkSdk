@@ -13,4 +13,5 @@ public class RhbkConfiguration
     [ConfigurationKeyName("RedirectUri")] public string RedirectUri { get; set; } = string.Empty;
     [ConfigurationKeyName("AdminUsername")] public string AdminUsername { get; set; } = string.Empty;
     [ConfigurationKeyName("AdminPassword")] public string AdminPassword { get; set; } = string.Empty;
+    [ConfigurationKeyName("ClientGroupId")] public string ClientGroupId { get; set; } = string.Empty;
 }
