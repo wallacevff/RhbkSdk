@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Text.Json;
 using Refit;
 using RhbkSdk.Exceptions;
 using RhbkSdk.Interfaces;
@@ -241,6 +242,107 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
+    public async Task<DefaultResponseBody<string?>> SetGroupEnabledAsync(
+        string token,
+        string realm,
+        Guid groupId,
+        Guid clientId,
+        bool enabled,
+        string backupAttributeName = "disabled_roles_backup",
+        string disabledAttributeName = "disabled",
+        CancellationToken cancellationToken = default)
+    {
+        var group = await FindGroupByIdAsync(token, realm, groupId, cancellationToken);
+        var attributes = group.Attributes is null
+            ? new Dictionary<string, IList<string>>(StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, IList<string>>(group.Attributes, StringComparer.OrdinalIgnoreCase);
+
+        var currentRolesResponse = await GetGroupClientRolesAsync(
+            token,
+            realm,
+            groupId,
+            clientId,
+            cancellationToken: cancellationToken
+        );
+        var currentRoles = (currentRolesResponse.Data ?? [])
+            .Where(r => !string.IsNullOrWhiteSpace(r.Name))
+            .ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
+
+        if (!enabled)
+        {
+            if (!attributes.ContainsKey(backupAttributeName))
+            {
+                var roleNamesToBackup = currentRoles.Keys
+                    .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                attributes[backupAttributeName] = [JsonSerializer.Serialize(roleNamesToBackup)];
+            }
+
+            if (currentRoles.Count > 0)
+            {
+                await DeleteGroupClientRolesAsync(
+                    token,
+                    realm,
+                    groupId,
+                    clientId,
+                    currentRoles.Values.ToList(),
+                    cancellationToken
+                );
+            }
+
+            attributes[disabledAttributeName] = ["true"];
+        }
+        else
+        {
+            attributes[disabledAttributeName] = ["false"];
+
+            var backupRoleNames = ReadBackupRoleNames(attributes, backupAttributeName);
+            if (backupRoleNames.Count > 0)
+            {
+                var allClientRolesResponse = await GetClientRolesAsync(token, realm, clientId);
+                var allClientRoles = (allClientRolesResponse.Data ?? [])
+                    .Where(r => !string.IsNullOrWhiteSpace(r.Name))
+                    .ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
+
+                var rolesToRestore = backupRoleNames
+                    .Where(allClientRoles.ContainsKey)
+                    .Where(roleName => !currentRoles.ContainsKey(roleName))
+                    .Select(roleName => new RoleGroupMapping
+                    {
+                        Id = allClientRoles[roleName].Id,
+                        Name = allClientRoles[roleName].Name
+                    })
+                    .ToList();
+
+                if (rolesToRestore.Count > 0)
+                {
+                    await CreateGroupClientRolesAsync(
+                        token,
+                        realm,
+                        groupId,
+                        clientId,
+                        rolesToRestore,
+                        cancellationToken
+                    );
+                }
+            }
+
+            attributes.Remove(backupAttributeName);
+        }
+
+        return await EditGroupAsync(
+            token,
+            realm,
+            groupId,
+            new GroupUpdateRequestBody
+            {
+                Name = group.Name ?? string.Empty,
+                Attributes = attributes
+            },
+            cancellationToken
+        );
+    }
+
     #endregion
 
     #region Client Methods
@@ -373,5 +475,67 @@ public class RhbkClient : IRhbkClient
             StatusCode = (int)response.StatusCode,
             Data = response.Content
         };
+    }
+
+    private async Task<GroupResponse> FindGroupByIdAsync(
+        string token,
+        string realm,
+        Guid groupId,
+        CancellationToken cancellationToken)
+    {
+        var rootsResponse = await GetGroupAsync(token, realm, cancellationToken: cancellationToken);
+        var queue = new Queue<GroupResponse>(rootsResponse.Data ?? []);
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            if (current.Id == groupId)
+            {
+                return current;
+            }
+
+            var childrenResponse = await GetSubGroupAsync(
+                token,
+                realm,
+                current.Id,
+                cancellationToken: cancellationToken
+            );
+            if (childrenResponse.Data is null)
+            {
+                continue;
+            }
+
+            foreach (var child in childrenResponse.Data)
+            {
+                queue.Enqueue(child);
+            }
+        }
+
+        throw new RhbkSdkDefaultException(404, $"Group '{groupId}' not found.");
+    }
+
+    private static HashSet<string> ReadBackupRoleNames(
+        IDictionary<string, IList<string>> attributes,
+        string backupAttributeName)
+    {
+        if (!attributes.TryGetValue(backupAttributeName, out var backupRaw) ||
+            backupRaw is null ||
+            backupRaw.Count == 0 ||
+            string.IsNullOrWhiteSpace(backupRaw[0]))
+        {
+            return [];
+        }
+
+        try
+        {
+            var names = JsonSerializer.Deserialize<List<string>>(backupRaw[0]) ?? [];
+            return names
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
     }
 }

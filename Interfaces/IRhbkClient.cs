@@ -64,6 +64,16 @@ public interface IRhbkClient
         Guid clientId,
         IList<RoleGroupMapping> roles, CancellationToken cancellationToken = default);
 
+    public Task<DefaultResponseBody<string?>> SetGroupEnabledAsync(
+        string token,
+        string realm,
+        Guid groupId,
+        Guid clientId,
+        bool enabled,
+        string backupAttributeName = "disabled_roles_backup",
+        string disabledAttributeName = "disabled",
+        CancellationToken cancellationToken = default);
+
 
     public Task<DefaultResponseBody<IList<RoleResponse>?>> GetClientRolesAsync(string token, string realm,
         Guid clientId,

@@ -109,6 +109,7 @@ Esse objeto inclui:
 ### 👥 Grupos
 - Criar grupos e subgrupos
 - Editar grupo
+- Habilitar/desabilitar grupo com backup/restore de roles
 - Buscar todos os grupos ou subgrupos
 - Buscar membros
 - Adicionar/remover papéis de grupos
@@ -130,6 +131,26 @@ await _rhbkClient.EditGroupAsync(
             ["system"] = new List<string> { "rhbk-sdk" }
         }
     },
+    cancellationToken: cancellationToken);
+```
+
+Exemplo de desabilitar/habilitar grupo preservando roles:
+
+```csharp
+await _rhbkClient.SetGroupEnabledAsync(
+    token: accessToken,
+    realm: "meu-realm",
+    groupId: groupId,
+    clientId: clientId,
+    enabled: false,
+    cancellationToken: cancellationToken);
+
+await _rhbkClient.SetGroupEnabledAsync(
+    token: accessToken,
+    realm: "meu-realm",
+    groupId: groupId,
+    clientId: clientId,
+    enabled: true,
     cancellationToken: cancellationToken);
 ```
 
