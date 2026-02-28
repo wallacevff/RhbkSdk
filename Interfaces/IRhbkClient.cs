@@ -28,6 +28,9 @@ public interface IRhbkClient
 
     public Task<DefaultResponseBody<string?>> CreateSubGroupAsync(string token, string realm, Guid groupId,
         GroupCreateRequestBody body, CancellationToken cancellationToken = default);
+    
+    public Task<DefaultResponseBody<string?>> EditGroupAsync(string token, string realm, Guid groupId,
+        GroupUpdateRequestBody body, CancellationToken cancellationToken = default);
 
     public Task<DefaultResponseBody<IList<GroupResponse>?>> GetGroupAsync(string token, string realm,
         Params? queryParams = null,

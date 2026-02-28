@@ -123,6 +123,14 @@ public class RhbkClient : IRhbkClient
         CaptureException(result);
         return GenResponse(result);
     }
+    
+    public async Task<DefaultResponseBody<string?>> EditGroupAsync(string token, string realm, Guid groupId,
+        GroupUpdateRequestBody body, CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.EditGroupAsync($"Bearer {token}", realm, groupId, body, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
 
     public async Task<DefaultResponseBody<IList<GroupResponse>?>> GetGroupAsync(string token, string realm,
         Params? queryParams = null,

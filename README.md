@@ -91,6 +91,7 @@ Esse objeto inclui:
 - `RoleGroupMapping`
 - `GetTokenResponseBody`
 - `GroupCreateRequestBody`
+- `GroupUpdateRequestBody`
 - `ClientRoleRequestBody`
 - `GroupRoleManagementRequestBody`
 - `RhbkConfiguration`
@@ -107,10 +108,30 @@ Esse objeto inclui:
 
 ### 👥 Grupos
 - Criar grupos e subgrupos
+- Editar grupo
 - Buscar todos os grupos ou subgrupos
 - Buscar membros
 - Adicionar/remover papéis de grupos
 - Deletar grupos
+
+Exemplo de edição de grupo:
+
+```csharp
+await _rhbkClient.EditGroupAsync(
+    token: accessToken,
+    realm: "meu-realm",
+    groupId: groupId,
+    body: new GroupUpdateRequestBody
+    {
+        Name = "novo-nome-do-grupo",
+        Attributes = new Dictionary<string, IList<string>>
+        {
+            ["costCenter"] = new List<string> { "TI-01" },
+            ["system"] = new List<string> { "rhbk-sdk" }
+        }
+    },
+    cancellationToken: cancellationToken);
+```
 
 ### 🧑‍💼 Usuários
 - Listar usuários

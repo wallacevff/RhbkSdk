@@ -1,0 +1,2166 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.github/
+  workflows/
+    publish-nuget.yml
+Assets/
+  redhat.png
+Configurations/
+  RhbkConfiguration.cs
+Exceptions/
+  RhbkSdkDefaultException.cs
+Extensions/
+  IServiceCollectionExtensios.cs
+  WebApplicationBuilderExtensions.cs
+Interfaces/
+  IRhbkClient.cs
+  IRhbkClientApiClient.cs
+  IRhbkClientApiGroup.cs
+  IRhbkClientApiToken.cs
+  IRhbkClientApiUser.cs
+Models/
+  AccessControl.cs
+  ClientResponse.cs
+  GroupResponse.cs
+  Role.cs
+  UserResponse.cs
+Providers/
+  RhbkClient.cs
+RequestBody/
+  ClientRoleRequestBody.cs
+  GetTokenRequestBody.cs
+  GroupCreateRequestBody.cs
+  GroupRoleManagementRequestBody.cs
+  LogoffRequestBody.cs
+RequestParams/
+  Params.cs
+ResponseBody/
+  DefaultResponseBody.cs
+  GetTokenResponseBody.cs
+.gitattributes
+.gitignore
+AGENTS.md
+clear_template.bat
+gitlab-ci.yml
+GrantType.cs
+LICENSE.txt
+Microsoft.AspNetCore.dll
+README.md
+redhat.png
+RhbkSdk.csproj
+RhbkSdk.sln
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="AGENTS.md">
+# AGENTS.md
+
+## Objetivo do repositório
+- Biblioteca `.NET 8` (`RhbkSdk`) para integração com RHBK/Keycloak.
+- Camada de abstração para autenticação, grupos, clientes e usuários.
+- Cliente principal: `Providers/RhbkClient.cs`, exposto por `IRhbkClient`.
+
+## Estrutura principal
+- `Providers/`: implementação do cliente (`RhbkClient`).
+- `Interfaces/`: contratos públicos e contratos Refit.
+- `Models/`: modelos de domínio/resposta.
+- `RequestBody/`, `RequestParams/`, `ResponseBody/`: DTOs de entrada/saída.
+- `Extensions/`: registro em DI (`AddRhbkClient`).
+- `Configurations/`: opções de configuração (`RhbkConfiguration`).
+- `Exceptions/`: exceções customizadas.
+
+## Fluxo obrigatório para qualquer agente
+1. Sempre estudar o projeto primeiro via `repomix`, antes de editar código.
+2. Comando padrão:
+   - `repomix -o repomix-output.xml`
+3. Após gerar o arquivo, usar o conteúdo do `repomix-output.xml` como base inicial de contexto.
+4. Só depois complementar com leitura pontual de arquivos específicos quando necessário.
+
+## Boas práticas de alteração
+- Preservar APIs públicas de `IRhbkClient` (evitar quebra de contrato).
+- Manter compatibilidade com `net8.0`.
+- Priorizar mudanças pequenas, testáveis e com impacto localizado.
+</file>
+
+<file path="Extensions/IServiceCollectionExtensios.cs">
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using RhbkSdk.Interfaces;
+
+namespace RhbkSdk.Extensions;
+
+public static class IServiceCollectionExtensions
+{
+    public static IServiceCollection AddRhbkClient(this IServiceCollection services, string baseUrl, ServiceLifetime? lifetime = null)
+    {
+        switch (lifetime)
+        {
+            case ServiceLifetime.Singleton:
+                IRhbkClient clientApi = new Providers.RhbkClient(baseUrl);
+                services.AddSingleton<IRhbkClient>(clientApi);
+                break;
+            case ServiceLifetime.Scoped:
+                services.AddScoped<IRhbkClient, Providers.RhbkClient>(provider => new Providers.RhbkClient(baseUrl));
+                break;
+            case ServiceLifetime.Transient:
+                services.AddTransient<IRhbkClient, Providers.RhbkClient>(provider => new Providers.RhbkClient(baseUrl));
+                break;
+            default:
+                services.AddTransient<IRhbkClient, Providers.RhbkClient>(provider => new Providers.RhbkClient(baseUrl));
+                break;
+        }
+        return services;
+    }
+}
+</file>
+
+<file path="Models/AccessControl.cs">
+using System.Text.Json.Serialization;
+
+namespace RhbkSdk.Models;
+
+public class Access
+{
+    [JsonPropertyName("view")] public bool View { get; set; }
+
+    [JsonPropertyName("viewMembers")] public bool ViewMembers { get; set; }
+
+    [JsonPropertyName("manageMembers")] public bool ManageMembers { get; set; }
+
+    [JsonPropertyName("manage")] public bool Manage { get; set; }
+
+    [JsonPropertyName("manageMembership")] public bool ManageMembership { get; set; }
+
+    public Access()
+    {
+    }
+
+    public Access(bool view, bool viewMembers, bool manageMembers, bool manage, bool manageMembership)
+    {
+        View = view;
+        ViewMembers = viewMembers;
+        ManageMembers = manageMembers;
+        Manage = manage;
+        ManageMembership = manageMembership;
+    }
+}
+</file>
+
+<file path="Models/ClientResponse.cs">
+using System.Text.Json.Serialization;
+
+namespace RhbkSdk.Models;
+
+public class ClientResponse
+{
+    [JsonPropertyName("id")]
+    public Guid Id { get; set; }
+
+    [JsonPropertyName("clientId")]
+    public string ClientId { get; set; } = string.Empty;
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("description")]
+    public string Description { get; set; } = string.Empty;
+
+    [JsonPropertyName("rootUrl")]
+    public string RootUrl { get; set; } = string.Empty;
+
+    [JsonPropertyName("adminUrl")]
+    public string AdminUrl { get; set; } = string.Empty;
+
+    [JsonPropertyName("baseUrl")]
+    public string BaseUrl { get; set; } = string.Empty;
+
+    [JsonPropertyName("surrogateAuthRequired")]
+    public bool SurrogateAuthRequired { get; set; }
+
+    [JsonPropertyName("enabled")]
+    public bool Enabled { get; set; }
+
+    [JsonPropertyName("alwaysDisplayInConsole")]
+    public bool AlwaysDisplayInConsole { get; set; }
+
+    [JsonPropertyName("clientAuthenticatorType")]
+    public string ClientAuthenticatorType { get; set; } = string.Empty;
+
+    [JsonPropertyName("secret")]
+    public string Secret { get; set; } = string.Empty;
+
+    [JsonPropertyName("redirectUris")]
+    public IEnumerable<string> RedirectUris { get; set; } = new List<string>();
+
+    [JsonPropertyName("webOrigins")]
+    public IEnumerable<string> WebOrigins { get; set; } = new List<string>();
+
+    [JsonPropertyName("notBefore")]
+    public int NotBefore { get; set; }
+
+    [JsonPropertyName("bearerOnly")]
+    public bool BearerOnly { get; set; }
+
+    [JsonPropertyName("consentRequired")]
+    public bool ConsentRequired { get; set; }
+
+    [JsonPropertyName("standardFlowEnabled")]
+    public bool StandardFlowEnabled { get; set; }
+
+    [JsonPropertyName("implicitFlowEnabled")]
+    public bool ImplicitFlowEnabled { get; set; }
+
+    [JsonPropertyName("directAccessGrantsEnabled")]
+    public bool DirectAccessGrantsEnabled { get; set; }
+
+    [JsonPropertyName("serviceAccountsEnabled")]
+    public bool ServiceAccountsEnabled { get; set; }
+
+    [JsonPropertyName("publicClient")]
+    public bool PublicClient { get; set; }
+
+    [JsonPropertyName("frontchannelLogout")]
+    public bool FrontchannelLogout { get; set; }
+
+    [JsonPropertyName("protocol")]
+    public string Protocol { get; set; } = string.Empty;
+
+    [JsonPropertyName("attributes")]
+    public Dictionary<string, string> Attributes { get; set; } = new Dictionary<string, string>();
+
+    [JsonPropertyName("authenticationFlowBindingOverrides")]
+    public Dictionary<string, string> AuthenticationFlowBindingOverrides { get; set; } = new Dictionary<string, string>();
+
+    [JsonPropertyName("fullScopeAllowed")]
+    public bool FullScopeAllowed { get; set; }
+
+    [JsonPropertyName("nodeReRegistrationTimeout")]
+    public int NodeReRegistrationTimeout { get; set; }
+
+    [JsonPropertyName("protocolMappers")]
+    public IEnumerable<ProtocolMapper> ProtocolMappers { get; set; } = new List<ProtocolMapper>();
+
+    [JsonPropertyName("defaultClientScopes")]
+    public IEnumerable<string> DefaultClientScopes { get; set; } = new List<string>();
+
+    [JsonPropertyName("optionalClientScopes")]
+    public IEnumerable<string> OptionalClientScopes { get; set; } = new List<string>();
+
+    [JsonPropertyName("access")]
+    public Access Access { get; set; } = new Access();
+    
+
+    public class ProtocolMapper
+    {
+        [JsonPropertyName("id")]
+        public Guid Id { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonPropertyName("protocol")]
+        public string Protocol { get; set; } = string.Empty;
+
+        [JsonPropertyName("protocolMapper")]
+        public string ProtocolMapperName { get; set; } = string.Empty;
+
+        [JsonPropertyName("consentRequired")]
+        public bool ConsentRequired { get; set; }
+
+        [JsonPropertyName("config")]
+        public Dictionary<string, string> Config { get; set; } = new Dictionary<string, string>();
+    }
+    
+}
+</file>
+
+<file path="Models/GroupResponse.cs">
+using System.Text.Json.Serialization;
+
+namespace RhbkSdk.Models;
+
+public class GroupResponse
+{
+    [JsonPropertyName("id")] public Guid Id { get; set; }
+    [JsonPropertyName("name")] public string? Name { get; set; }
+    [JsonPropertyName("path")] public string? Path { get; set; }
+    [JsonPropertyName("parentId")] public Guid? ParentId { get; set; }
+    [JsonPropertyName("subGroupCount")] public int SubGroupCount { get; set; }
+    [JsonPropertyName("subGroups")] public IList<GroupResponse> SubGroups { get; set; } = [];
+    
+    [JsonPropertyName("attributes")]
+    public Dictionary<string, IList<string>>? Attributes { get; set; } = new Dictionary<string, IList<string>>();
+    
+    [JsonPropertyName("realmRoles")] public IList<string> RealmRoles { get; set; } = new List<string>();
+    
+    [JsonPropertyName("clientRoles")]
+    public Dictionary<string, IList<string>> ClientRoles { get; set; } = new Dictionary<string, IList<string>>();
+
+    [JsonPropertyName("access")] public Access Access { get; set; } = new Access();
+}
+</file>
+
+<file path="Models/UserResponse.cs">
+namespace RhbkSdk.Models;
+
+public class UserResponse
+{
+    public Guid Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public bool EmailVerified { get; set; }
+    public long CreatedTimestamp { get; set; }
+    public bool Enabled { get; set; }
+    public bool Totp { get; set; }
+    public List<string> DisableableCredentialTypes { get; set; } = new();
+    public List<string> RequiredActions { get; set; } = new();
+    public int NotBefore { get; set; }
+    public Access Access { get; set; } = new Access();
+    public Dictionary<string, IList<string>> Attributes { get; set; } = new Dictionary<string, IList<string>>();
+}
+</file>
+
+<file path="RequestBody/ClientRoleRequestBody.cs">
+using System.Text.Json.Serialization;
+
+namespace RhbkSdk.RequestBody;
+
+public class ClientRoleRequestBody
+{
+    [JsonPropertyName("name")]
+    public string Name { get; set; }
+
+    [JsonPropertyName("description")]
+    public string Description { get; set; }
+
+    [JsonPropertyName("composite")]
+    public bool Composite { get; set; } = false;
+
+    [JsonPropertyName("clientRole")]
+    public bool ClientRoleFlag { get; set; } = true;
+
+    
+    public ClientRoleRequestBody(string name, string description)
+    {
+        Name = name;
+        Description = description;
+    }
+    
+    public ClientRoleRequestBody()
+    {
+        Name = string.Empty;
+        Description = string.Empty;
+    }
+}
+</file>
+
+<file path="RequestBody/GroupCreateRequestBody.cs">
+using System.Text.Json.Serialization;
+
+namespace RhbkSdk.RequestBody;
+
+public class GroupCreateRequestBody
+{
+    [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
+}
+</file>
+
+<file path="RequestBody/GroupRoleManagementRequestBody.cs">
+using System.Text.Json.Serialization;
+
+namespace RhbkSdk.RequestBody;
+
+public class GroupRoleManagementRequestBody
+{
+    [JsonPropertyName("id")] public Guid Id { get; set; }
+    [JsonPropertyName("name")] public string Name { get; set; }
+
+    public GroupRoleManagementRequestBody(Guid id, string name)
+    {
+        Id = id;
+        Name = name;
+    }
+
+    public GroupRoleManagementRequestBody()
+    {
+        Name = string.Empty;
+    }
+}
+</file>
+
+<file path="RequestBody/LogoffRequestBody.cs">
+namespace RhbkSdk.RequestBody;
+
+public class LogoffRequestBody
+{
+    public string ClientId { get; set; } = string.Empty;
+    public string ClientSecret { get; set; } = string.Empty;
+    public string RefreshToken { get; set; } = string.Empty;
+
+    public Dictionary<string, string> ToDictionary()
+    {
+        return new Dictionary<string, string>
+        {
+            { "client_id", ClientId },
+            { "client_secret", ClientSecret },
+            { "refresh_token", RefreshToken }
+        };
+    }
+}
+</file>
+
+<file path="RequestParams/Params.cs">
+using Refit;
+
+namespace RhbkSdk.RequestParams;
+
+public class Params
+{
+    [Query("search")] public string?  Search { get; set; }
+    [Query("max")] public int?  Max { get; set; }
+    [Query("first")] public int?  First { get; set; }
+    
+}
+</file>
+
+<file path="ResponseBody/DefaultResponseBody.cs">
+namespace RhbkSdk.ResponseBody;
+
+public class DefaultResponseBody<T>
+{
+    public int StatusCode { get; set; }
+    public T? Data { get; set; }
+}
+</file>
+
+<file path="clear_template.bat">
+@echo off
+echo Limpando pastas bin, obj e node_modules...
+
+for /d /r %%d in (bin, obj, node_modules, Uploads) do (
+    if exist "%%d" (
+        echo Excluindo: %%d
+        rmdir /s /q "%%d"
+    )
+)
+
+echo Limpeza concluída.
+pause
+</file>
+
+<file path="gitlab-ci.yml">
+include:
+  - project: 'ses-rj/ci-cd/pipelines'
+    ref: main
+    file: 'simple-ci/manifests/v1/v1.yml'
+</file>
+
+<file path="GrantType.cs">
+namespace RhbkSdk;
+
+public class GrantTypeOption
+{
+    public const string AuthorizationCode = "authorization_code";
+    public const string RefreshToken = "refresh_token";
+    public const string Password = "password";
+}
+</file>
+
+<file path="RhbkSdk.sln">
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35828.75 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RhbkSdk", "RhbkSdk.csproj", "{D08E73F6-7433-41D7-8933-5E058A3615C1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DE7F97D6-12A4-4818-9AEA-A70B44482752}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE7F97D6-12A4-4818-9AEA-A70B44482752}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE7F97D6-12A4-4818-9AEA-A70B44482752}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE7F97D6-12A4-4818-9AEA-A70B44482752}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D08E73F6-7433-41D7-8933-5E058A3615C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D08E73F6-7433-41D7-8933-5E058A3615C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D08E73F6-7433-41D7-8933-5E058A3615C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D08E73F6-7433-41D7-8933-5E058A3615C1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {819708DF-49A2-49ED-858F-423E738B1FB7}
+	EndGlobalSection
+EndGlobal
+</file>
+
+<file path="Exceptions/RhbkSdkDefaultException.cs">
+namespace RhbkSdk.Exceptions;
+
+public class RhbkSdkDefaultException(int statusCode, string message) : Exception(message)
+{
+    public int StatusCode => statusCode;
+}
+</file>
+
+<file path="Extensions/WebApplicationBuilderExtensions.cs">
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using RhbkSdk.Interfaces;
+
+namespace RhbkSdk.Extensions;
+
+public static class WebApplicationBuilderExtensions
+{
+    public static WebApplicationBuilder AddRhbkClient(this WebApplicationBuilder builder, string baseUrl, ServiceLifetime? lifetime = null)
+    {
+        switch (lifetime)
+        {
+            case ServiceLifetime.Singleton:
+                IRhbkClient clientApi = new Providers.RhbkClient(baseUrl);
+                builder.Services.AddSingleton<IRhbkClient>(clientApi);
+                break;
+            case ServiceLifetime.Scoped:
+                builder.Services.AddScoped<IRhbkClient, Providers.RhbkClient>(provider => new Providers.RhbkClient(baseUrl));
+                break;
+            case ServiceLifetime.Transient:
+                builder.Services.AddTransient<IRhbkClient, Providers.RhbkClient>(provider => new Providers.RhbkClient(baseUrl));
+                break;
+            default:
+                builder.Services.AddTransient<IRhbkClient, Providers.RhbkClient>(provider => new Providers.RhbkClient(baseUrl));
+                break;
+        }
+        return builder;
+    }
+}
+</file>
+
+<file path="Interfaces/IRhbkClientApiClient.cs">
+using Refit;
+using RhbkSdk.Models;
+using RhbkSdk.RequestBody;
+using RhbkSdk.RequestParams;
+using RhbkSdk.ResponseBody;
+
+namespace RhbkSdk.Interfaces;
+
+public partial interface IRhbkClientApi
+{
+    [Get("/admin/realms/{realm}/clients/{clientId}/roles")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<IList<RoleResponse>?>> GetClientRolesAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("clientId")] Guid clientId,
+        [Query] Params? queryParams = null,
+        CancellationToken cancellationToken = default
+    );
+    
+    [Post("/admin/realms/{realm}/clients/{clientId}/roles")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<string?>> CreateClientRolesAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("clientId")] Guid clientId,
+        [Body] RoleCreateRequestBody body,
+        CancellationToken cancellationToken = default
+    );
+    
+    [Delete("/admin/realms/{realm}/clients/{clientId}/roles/{roleName}")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<string?>> DeleteClientRolesAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("clientId")] Guid clientId,
+        [AliasAs("roleName")] string roleName,
+        CancellationToken cancellationToken = default
+    );
+    
+    [Get("/admin/realms/{realm}/clients")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<IList<ClientResponse>?>> GetClientByNameAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [Query("clientId")] string clientName,
+        CancellationToken cancellationToken = default
+    );
+}
+</file>
+
+<file path="Interfaces/IRhbkClientApiGroup.cs">
+using Refit;
+using RhbkSdk.Models;
+using RhbkSdk.RequestBody;
+using RhbkSdk.RequestParams;
+
+namespace RhbkSdk.Interfaces;
+
+public partial interface IRhbkClientApi
+{
+    [Post("/admin/realms/{realm}/groups")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<string?>> CreateGroupAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [Body] GroupCreateRequestBody body,
+        CancellationToken cancellationToken = default
+    );
+
+
+    [Get("/admin/realms/{realm}/groups")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<IList<GroupResponse>?>> GetAllGroupAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [Query] Params? queryParams = null,
+        CancellationToken cancellationToken = default
+    );
+
+
+    [Get("/admin/realms/{realm}/groups/{group_id}/children")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<IList<GroupResponse>?>> GetAllSubgroupsAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("group_id")] Guid groupId,
+        [Query] Params? queryParams = null,
+        CancellationToken cancellationToken = default
+    );
+
+    [Post("/admin/realms/{realm}/groups/{group_id}/children")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<string?>> CreateSubGroupAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("group_id")] Guid groupId,
+        [Body] GroupCreateRequestBody body,
+        CancellationToken cancellationToken = default
+    );
+    
+    [Get("/admin/realms/{realm}/groups/{group_id}/members")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<IList<UserResponse>?>> GetGroupMembersAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("group_id")] Guid groupId,
+        [Query] Params? queryParams = null,
+        CancellationToken cancellationToken = default
+    );
+    
+    [Delete("/admin/realms/{realm}/groups/{group_id}")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<IList<UserResponse>?>> DeleteGroupAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("group_id")] Guid groupId,
+        CancellationToken cancellationToken = default
+    );
+    
+    
+    [Get("/admin/realms/{realm}/groups/{group_id}/role-mappings/clients/{client_id}")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<IList<RoleGroupMapping>?>> GetGroupClientRolesAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("group_id")] Guid groupId,
+        [AliasAs("client_id")] Guid clientId,
+        [Query] Params? queryParams = null,
+        CancellationToken cancellationToken = default
+    );
+    
+    
+    [Post("/admin/realms/{realm}/groups/{group_id}/role-mappings/clients/{client_id}")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<string?>> CreateGroupClientRolesAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("group_id")] Guid groupId,
+        [AliasAs("client_id")] Guid clientId,
+        [Body] IList<RoleGroupMapping> roles,
+        CancellationToken cancellationToken = default
+    );
+    
+    [Delete("/admin/realms/{realm}/groups/{group_id}/role-mappings/clients/{client_id}")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<string?>> DeleteGroupClientRolesAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("group_id")] Guid groupId,
+        [AliasAs("client_id")] Guid clientId,
+        [Body] IList<RoleGroupMapping> roles,
+        CancellationToken cancellationToken = default
+    );
+}
+</file>
+
+<file path="Models/Role.cs">
+namespace RhbkSdk.Models;
+
+public class RoleCreateRequestBody
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+}
+public class RoleResponse : RoleCreateRequestBody
+{
+    public Guid Id { get; set; }
+    public bool Composite { get; set; }
+    public bool ClientRole { get; set; }
+    public Guid ContainerId { get; set; }
+}
+
+
+
+public class RoleGroupMapping
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+</file>
+
+<file path="ResponseBody/GetTokenResponseBody.cs">
+using System.Text.Json.Serialization;
+
+namespace RhbkSdk.ResponseBody;
+
+public class GetTokenResponseBody
+{
+    [JsonPropertyName("access_token")]
+    public string? AccessToken { get; set; }
+
+    [JsonPropertyName("expires_in")]
+    public int ExpiresIn { get; set; }
+
+    [JsonPropertyName("refresh_expires_in")]
+    public int RefreshExpiresIn { get; set; }
+
+    [JsonPropertyName("refresh_token")]
+    public string? RefreshToken { get; set; }
+
+    [JsonPropertyName("token_type")]
+    public string? TokenType { get; set; }
+
+    [JsonPropertyName("not-before-policy")]
+    public int NotBeforePolicy { get; set; }
+
+    [JsonPropertyName("session_state")]
+    public string? SessionState { get; set; }
+
+    [JsonPropertyName("scope")]
+    public string? Scope { get; set; }
+    
+    [JsonPropertyName("id_token")]
+    public string? TokenId { get; set; }
+}
+</file>
+
+<file path=".gitattributes">
+###############################################################################
+# Set default behavior to automatically normalize line endings.
+###############################################################################
+* text=auto
+
+###############################################################################
+# Set default behavior for command prompt diff.
+#
+# This is need for earlier builds of msysgit that does not have it on by
+# default for csharp files.
+# Note: This is only used by command line
+###############################################################################
+#*.cs     diff=csharp
+
+###############################################################################
+# Set the merge driver for project and solution files
+#
+# Merging from the command prompt will add diff markers to the files if there
+# are conflicts (Merging from VS is not affected by the settings below, in VS
+# the diff markers are never inserted). Diff markers may cause the following 
+# file extensions to fail to load in VS. An alternative would be to treat
+# these files as binary and thus will always conflict and require user
+# intervention with every merge. To do so, just uncomment the entries below
+###############################################################################
+#*.sln       merge=binary
+#*.csproj    merge=binary
+#*.vbproj    merge=binary
+#*.vcxproj   merge=binary
+#*.vcproj    merge=binary
+#*.dbproj    merge=binary
+#*.fsproj    merge=binary
+#*.lsproj    merge=binary
+#*.wixproj   merge=binary
+#*.modelproj merge=binary
+#*.sqlproj   merge=binary
+#*.wwaproj   merge=binary
+
+###############################################################################
+# behavior for image files
+#
+# image files are treated as binary by default.
+###############################################################################
+#*.jpg   binary
+#*.png   binary
+#*.gif   binary
+
+###############################################################################
+# diff behavior for common document formats
+# 
+# Convert binary document formats to text before diffing them. This feature
+# is only available from the command line. Turn it on by uncommenting the 
+# entries below.
+###############################################################################
+#*.doc   diff=astextplain
+#*.DOC   diff=astextplain
+#*.docx  diff=astextplain
+#*.DOCX  diff=astextplain
+#*.dot   diff=astextplain
+#*.DOT   diff=astextplain
+#*.pdf   diff=astextplain
+#*.PDF   diff=astextplain
+#*.rtf   diff=astextplain
+#*.RTF   diff=astextplain
+</file>
+
+<file path=".gitignore">
+## Ignore Visual Studio temporary files, build results, and
+## files generated by popular Visual Studio add-ons.
+##
+## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Mono auto generated files
+mono_crash.*
+**/.idea/
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio 2015/2017 cache/options directory
+.vs/
+# Uncomment if you have tasks that create the project's static files in wwwroot
+#wwwroot/
+
+# Visual Studio 2017 auto generated files
+Generated\ Files/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NUnit
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+# Build Results of an ATL Project
+[Dd]ebugPS/
+[Rr]eleasePS/
+dlldata.c
+
+# Benchmark Results
+BenchmarkDotNet.Artifacts/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# StyleCop
+StyleCopReport.xml
+
+# Files built by Visual Studio
+*_i.c
+*_p.c
+*_h.h
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# Chutzpah Test files
+_Chutzpah*
+
+# Visual C++ cache files
+ipch/
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+# Visual Studio Trace Files
+*.e2e
+
+# TFS 2012 Local Workspace
+$tf/
+
+# Guidance Automation Toolkit
+*.gpState
+
+# ReSharper is a .NET coding add-in
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# TeamCity is a build add-in
+_TeamCity*
+
+# DotCover is a Code Coverage Tool
+*.dotCover
+
+# AxoCover is a Code Coverage Tool
+.axoCover/*
+!.axoCover/settings.json
+
+# Coverlet is a free, cross platform Code Coverage Tool
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# Visual Studio code coverage results
+*.coverage
+*.coveragexml
+
+# NCrunch
+_NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+
+# MightyMoose
+*.mm.*
+AutoTest.Net/
+
+# Web workbench (sass)
+.sass-cache/
+
+# Installshield output folder
+[Ee]xpress/
+
+# DocProject is a documentation generator add-in
+DocProject/buildhelp/
+DocProject/Help/*.HxT
+DocProject/Help/*.HxC
+DocProject/Help/*.hhc
+DocProject/Help/*.hhk
+DocProject/Help/*.hhp
+DocProject/Help/Html2
+DocProject/Help/html
+
+# Click-Once directory
+publish/
+
+# Publish Web Output
+*.[Pp]ublish.xml
+*.azurePubxml
+# Note: Comment the next line if you want to checkin your web deploy settings,
+# but database connection strings (with potential passwords) will be unencrypted
+*.pubxml
+*.publishproj
+
+# Microsoft Azure Web App publish settings. Comment the next line if you want to
+# checkin your Azure Web App publish settings, but sensitive information contained
+# in these scripts will be unencrypted
+PublishScripts/
+
+# NuGet Packages
+*.nupkg
+# NuGet Symbol Packages
+*.snupkg
+# The packages folder can be ignored because of Package Restore
+**/[Pp]ackages/*
+# except build/, which is used as an MSBuild target.
+!**/[Pp]ackages/build/
+# Uncomment if necessary however generally it will be regenerated when needed
+#!**/[Pp]ackages/repositories.config
+# NuGet v3's project.json files produces more ignorable files
+*.nuget.props
+*.nuget.targets
+
+# Microsoft Azure Build Output
+csx/
+*.build.csdef
+
+# Microsoft Azure Emulator
+ecf/
+rcf/
+
+# Windows Store app package directories and files
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_pkginfo.txt
+*.appx
+*.appxbundle
+*.appxupload
+
+# Visual Studio cache files
+# files ending in .cache can be ignored
+*.[Cc]ache
+# but keep track of directories ending in .cache
+!?*.[Cc]ache/
+
+# Others
+ClientBin/
+~$*
+*~
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+*.pfx
+*.publishsettings
+orleans.codegen.cs
+
+# Including strong name files can present a security risk
+# (https://github.com/github/gitignore/pull/2483#issue-259490424)
+#*.snk
+
+# Since there are multiple workflows, uncomment next line to ignore bower_components
+# (https://github.com/github/gitignore/pull/1529#issuecomment-104372622)
+#bower_components/
+
+# RIA/Silverlight projects
+Generated_Code/
+
+# Backup & report files from converting an old project file
+# to a newer Visual Studio version. Backup files are not needed,
+# because we have git ;-)
+_UpgradeReport_Files/
+Backup*/
+UpgradeLog*.XML
+UpgradeLog*.htm
+ServiceFabricBackup/
+*.rptproj.bak
+
+# SQL Server files
+*.mdf
+*.ldf
+*.ndf
+
+# Business Intelligence projects
+*.rdl.data
+*.bim.layout
+*.bim_*.settings
+*.rptproj.rsuser
+*- [Bb]ackup.rdl
+*- [Bb]ackup ([0-9]).rdl
+*- [Bb]ackup ([0-9][0-9]).rdl
+
+# Microsoft Fakes
+FakesAssemblies/
+
+# GhostDoc plugin setting file
+*.GhostDoc.xml
+
+# Node.js Tools for Visual Studio
+.ntvs_analysis.dat
+node_modules/
+
+# Visual Studio 6 build log
+*.plg
+
+# Visual Studio 6 workspace options file
+*.opt
+
+# Visual Studio 6 auto-generated workspace file (contains which files were open etc.)
+*.vbw
+
+# Visual Studio LightSwitch build output
+**/*.HTMLClient/GeneratedArtifacts
+**/*.DesktopClient/GeneratedArtifacts
+**/*.DesktopClient/ModelManifest.xml
+**/*.Server/GeneratedArtifacts
+**/*.Server/ModelManifest.xml
+_Pvt_Extensions
+
+# Paket dependency manager
+.paket/paket.exe
+paket-files/
+
+# FAKE - F# Make
+.fake/
+
+# CodeRush personal settings
+.cr/personal
+
+# Python Tools for Visual Studio (PTVS)
+__pycache__/
+*.pyc
+
+# Cake - Uncomment if you are using it
+# tools/**
+# !tools/packages.config
+
+# Tabs Studio
+*.tss
+
+# Telerik's JustMock configuration file
+*.jmconfig
+
+# BizTalk build output
+*.btp.cs
+*.btm.cs
+*.odx.cs
+*.xsd.cs
+
+# OpenCover UI analysis results
+OpenCover/
+
+# Azure Stream Analytics local run output
+ASALocalRun/
+
+# MSBuild Binary and Structured Log
+*.binlog
+
+# NVidia Nsight GPU debugger configuration file
+*.nvuser
+
+# MFractors (Xamarin productivity tool) working folder
+.mfractor/
+
+# Local History for Visual Studio
+.localhistory/
+
+# BeatPulse healthcheck temp database
+healthchecksdb
+
+# Backup folder for Package Reference Convert tool in Visual Studio 2017
+MigrationBackup/
+
+# Ionide (cross platform F# VS Code tools) working folder
+.ionide/
+
+# Fody - auto-generated XML schema
+FodyWeavers.xsd
+</file>
+
+<file path="LICENSE.txt">
+MIT License
+
+Copyright (c) 2025 Wallace Vidal de Figueiredo Fortuna
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</file>
+
+<file path="Configurations/RhbkConfiguration.cs">
+using Microsoft.Extensions.Configuration;
+
+namespace RhbkSdk.Configurations;
+
+public class RhbkConfiguration
+{
+    public static string ConfigurationSection = "RhbkConfiguration";
+
+    [ConfigurationKeyName("Realm")] public string Realm { get; set; } = string.Empty;
+    [ConfigurationKeyName("ClientId")] public string ClientId { get; set; } = string.Empty;
+    [ConfigurationKeyName("ClientSecret")] public string ClientSecret { get; set; } = string.Empty;
+    [ConfigurationKeyName("KeycloakBaseUrl")] public string KeycloakBaseUrl { get; set; } = string.Empty;
+    [ConfigurationKeyName("RedirectUri")] public string RedirectUri { get; set; } = string.Empty;
+    [ConfigurationKeyName("AdminUsername")] public string AdminUsername { get; set; } = string.Empty;
+    [ConfigurationKeyName("AdminPassword")] public string AdminPassword { get; set; } = string.Empty;
+    [ConfigurationKeyName("ClientGroupId")] public string ClientGroupId { get; set; } = string.Empty;
+}
+</file>
+
+<file path="Interfaces/IRhbkClientApiToken.cs">
+using Refit;
+using RhbkSdk.RequestBody;
+using RhbkSdk.ResponseBody;
+
+namespace RhbkSdk.Interfaces;
+
+public partial interface IRhbkClientApi
+{
+    [Post("/realms/{realm}/protocol/openid-connect/token")]
+    [Headers("Content-Type; application/x-www-form-urlencoded")]
+    public Task<ApiResponse<GetTokenResponseBody?>> GetTokenAsync(
+        [AliasAs("realm")] string realm,
+        [Body(BodySerializationMethod.UrlEncoded)] GetTokenRequestBody body,
+        CancellationToken cancellationToken = default
+    );
+    
+    [Post("/realms/{realm}/protocol/openid-connect/logout")]
+    [Headers("Content-Type: application/x-www-form-urlencoded")]
+    Task<ApiResponse<string>> LogoffAsync(
+        [AliasAs("realm")] string realm,
+        [Body(BodySerializationMethod.UrlEncoded)] Dictionary<string, string> body
+    );
+}
+</file>
+
+<file path="RequestBody/GetTokenRequestBody.cs">
+using Refit;
+
+namespace RhbkSdk.RequestBody;
+
+public class GetTokenRequestBody
+{
+    [AliasAs("grant_type")] public string GrantType { get; set; } = "authorization_code";
+    [AliasAs("code")] public string Code { get; set; } = string.Empty;
+    [AliasAs("client_id")] public string ClientId { get; set; } = "";
+    [AliasAs("client_secret")] public string ClientSecret { get; set; } = "";
+    [AliasAs("redirect_uri")] public string RedirectUri { get; set; } = "";
+    [AliasAs("username")] public string? UserName { get; set; } = "";
+    [AliasAs("password")] public string? Password { get; set; } = "";
+    [AliasAs("refresh_token")] public string? RefreshToken { get; set; } = "";
+    [AliasAs("scope")] public string? Scope { get; set; } = "openid";
+
+    public GetTokenRequestBody()
+    {
+        
+    }
+
+    public GetTokenRequestBody(
+        string clientId,
+        string clientSecret,
+        string redirectUri,
+        string code,
+        string grantType = GrantTypeOption.AuthorizationCode
+        )
+    {
+        GrantType = grantType;
+        ClientId = clientId;
+        ClientSecret = clientSecret;
+        RedirectUri = redirectUri;
+        Code = code;
+    }
+    
+    public GetTokenRequestBody(
+        string clientId,
+        string clientSecret,
+        string userName,
+        string password
+        )
+    {
+        GrantType = GrantTypeOption.Password;
+        ClientId = clientId;
+        ClientSecret = clientSecret;
+        UserName = userName;
+        Password = password;
+    }
+    
+    
+    public GetTokenRequestBody(
+        string clientId,
+        string clientSecret,
+        string refreshToken
+    )
+    {
+        GrantType = GrantTypeOption.RefreshToken;
+        ClientId = clientId;
+        ClientSecret = clientSecret;
+        RefreshToken = refreshToken;
+    }
+    
+}
+</file>
+
+<file path="Interfaces/IRhbkClientApiUser.cs">
+using Refit;
+using RhbkSdk.Models;
+using RhbkSdk.RequestParams;
+
+namespace RhbkSdk.Interfaces;
+
+public partial interface IRhbkClientApi
+{
+    [Get("/admin/realms/{realm}/users")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<IList<UserResponse>?>> GetUsersAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [Query] Params? queryParams = null,
+        CancellationToken cancellationToken = default
+    );
+    
+    [Put("/admin/realms/{realm}/users/{userId}/groups/{groupId}")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<string?>> UserJoinGroupAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("userId")] Guid clientId,
+        [AliasAs("groupId")] Guid groupId,
+        CancellationToken cancellationToken = default
+    );
+    
+    [Delete("/admin/realms/{realm}/users/{userId}/groups/{groupId}")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<string?>> UserLeaveGroupAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("userId")] Guid clientId,
+        [AliasAs("groupId")] Guid groupId,
+        CancellationToken cancellationToken = default
+    );
+    
+    [Get("/admin/realms/{realm}/users/{userId}/groups")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<List<GroupResponse>?>> UserGetGroupsAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("userId")] Guid clientId,
+        CancellationToken cancellationToken = default
+    );
+    
+    [Post("/admin/realms/{realm}/users")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<UserResponse>> CreateUserAsync(
+        [Header("Authorization")] string adminToken,
+        [AliasAs("realm")]string realm,
+        [Body] UserResponse userResponse,
+        CancellationToken cancellationToken = default
+    );
+}
+</file>
+
+<file path=".github/workflows/publish-nuget.yml">
+name: 📦 Publish NuGet Package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Ex: v1.0.0
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔄 Checkout
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: 📦 Restore
+        run: dotnet restore
+
+      - name: 🛠️ Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: 📦 Pack com versão da tag (sem 'v')
+        run: |
+          VERSION=${GITHUB_REF##*/}
+          VERSION=${VERSION#v}
+          echo "📦 Empacotando pacote com versão: $VERSION"
+          dotnet pack --configuration Release --no-build --output ./artifacts /p:Version=$VERSION
+
+      - name: 🚀 Publish to NuGet
+        run: dotnet nuget push ./artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+</file>
+
+<file path="README.md">
+# RhbkSdk
+
+O **RhbkSdk** é um SDK para .NET 8 que facilita a integração com a API RHBK (Keycloak), oferecendo uma camada de abstração moderna com suporte a grupos, papéis, autenticação e gerenciamento de usuários.
+
+---
+
+## 📦 Injeção de Dependência
+
+Registre o SDK no seu `Program.cs`:
+
+```csharp
+using RhbkSdk.Extensions;
+
+builder.AddRhbkClient("https://seu.keycloak.url", ServiceLifetime.Scoped);
+```
+
+---
+
+## ⚙️ Configuração por appsettings
+
+Recomendado usar a classe `RhbkConfiguration`:
+
+```json
+"RhbkConfiguration": {
+  "Realm": "meu-realm",
+  "ClientId": "client-id",
+  "ClientSecret": "segredo",
+  "KeycloakBaseUrl": "https://keycloak.meuservidor.com",
+  "RedirectUri": "https://meusite/callback"
+}
+```
+
+E carregar no startup:
+
+```csharp
+builder.Services.Configure<RhbkConfiguration>(
+    builder.Configuration.GetSection(RhbkConfiguration.ConfigurationSection));
+```
+
+---
+
+## 📘 Como Usar
+
+Você injeta a interface `IRhbkClient` diretamente:
+
+```csharp
+public class MeuServico
+{
+    private readonly IRhbkClient _rhbkClient;
+
+    public MeuServico(IRhbkClient rhbkClient)
+    {
+        _rhbkClient = rhbkClient;
+    }
+
+    public async Task<IList<UserResponse>> BuscarUsuarios()
+    {
+        var token = await _rhbkClient.GetTokenAsync("realm", new GetTokenRequestBody { ... });
+        var usuarios = await _rhbkClient.GetUsersAsync(token.Data?.AccessToken!, "realm");
+
+        return usuarios.Data ?? [];
+    }
+}
+```
+
+---
+
+## 🧪 Retorno Padrão
+
+Todas as chamadas assíncronas retornam:
+
+```csharp
+DefaultResponseBody<T>
+```
+
+Esse objeto inclui:
+
+- `StatusCode`: código HTTP da operação
+- `Data`: resultado da chamada, que pode ser nulo
+
+---
+
+## 📂 Models disponíveis
+
+- `Access`
+- `ClientResponse`
+- `GroupResponse`
+- `UserResponse`
+- `RoleResponse`
+- `RoleGroupMapping`
+- `GetTokenResponseBody`
+- `GroupCreateRequestBody`
+- `ClientRoleRequestBody`
+- `GroupRoleManagementRequestBody`
+- `RhbkConfiguration`
+
+---
+
+## ✅ Funcionalidades
+
+### 🔐 Autenticação
+- `GetTokenAsync`
+- `GetLoginUrl`
+- `GetLogoutUrl`
+- `GetLoginProviderUrl`
+
+### 👥 Grupos
+- Criar grupos e subgrupos
+- Buscar todos os grupos ou subgrupos
+- Buscar membros
+- Adicionar/remover papéis de grupos
+- Deletar grupos
+
+### 🧑‍💼 Usuários
+- Listar usuários
+- Adicionar usuário a grupo
+- Remover usuário de grupo
+
+### 🧩 Clientes
+- Buscar cliente por nome
+- Gerenciar papéis do cliente
+
+---
+
+## 🔗 Dependências
+
+- [Refit](https://www.nuget.org/packages/Refit) — cliente HTTP declarativo
+- [Microsoft.Extensions.DependencyInjection.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions)
+- [Microsoft.Extensions.Configuration](https://www.nuget.org/packages/Microsoft.Extensions.Configuration)
+
+---
+
+## 🚀 CI/CD Automatizado
+
+Este projeto possui pipeline com **GitHub Actions** que:
+
+- Compila
+- Empacota o `.nupkg`
+- Publica automaticamente no NuGet
+
+### Como publicar:
+
+1. Altere a versão no `csproj` (se necessário)
+2. Faça o commit
+3. Crie e envie uma tag:
+
+```bash
+git tag v8.0.2
+git push origin v8.0.2
+```
+
+O pacote será publicado com a versão `v8.0.2`.
+
+---
+
+## 📝 Licença
+
+Distribuído sob a licença MIT.  
+Consulte o arquivo [LICENSE.txt](./LICENSE.txt) para mais detalhes.
+
+---
+
+## 👨‍💻 Autor
+
+Desenvolvido por **Wallace Vidal de Figueiredo Fortuna**  
+[GitHub - wallacevff](https://github.com/wallacevff)
+```
+</file>
+
+<file path="Interfaces/IRhbkClient.cs">
+using RhbkSdk.Models;
+using RhbkSdk.RequestBody;
+using RhbkSdk.RequestParams;
+using RhbkSdk.ResponseBody;
+
+namespace RhbkSdk.Interfaces;
+
+public interface IRhbkClient
+{
+    public DefaultResponseBody<string> GetLoginUrl(string realm);
+
+    public DefaultResponseBody<string> GetLoginProviderUrl(
+        string realm,
+        string clientId,
+        string redirectUri,
+        string scope = "openid email profile sign");
+
+    public DefaultResponseBody<string> GetTokenUrl(string realm);
+    public DefaultResponseBody<string> GetUserInfoUrl(string realm);
+    public DefaultResponseBody<string> GetLogoutUrl(string realm, string token, string url);
+    public DefaultResponseBody<string> GetGroupsUrl(string realm);
+
+    public Task<DefaultResponseBody<GetTokenResponseBody?>> GetTokenAsync(string realm, GetTokenRequestBody body,
+        CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<string?>> CreateGroupAsync(string token, string realm, GroupCreateRequestBody body,
+        CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<string?>> CreateSubGroupAsync(string token, string realm, Guid groupId,
+        GroupCreateRequestBody body, CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<IList<GroupResponse>?>> GetGroupAsync(string token, string realm,
+        Params? queryParams = null,
+        CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<IList<GroupResponse>?>> GetSubGroupAsync(string token, string realm, Guid groupId,
+        Params? queryParams = null, CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<IList<RoleGroupMapping>?>> GetGroupClientRolesAsync(string token, string realm,
+        Guid groupId,
+        Guid clientId,
+        Params? queryParams = null, CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<IList<UserResponse>?>> GetGroupMembersAsync(string token, string realm,
+        Guid groupId,
+        Params? queryParams = null, CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<IList<UserResponse>>> GetGroupMembersFromSubGroupsAsync(string token, string realm,
+        Guid groupId,
+        Params? queryParams = null, CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<IList<UserResponse>?>> DeleteGroupOrSubGroupAsync(string token, string realm,
+        Guid groupId,
+        CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<string?>> CreateGroupClientRolesAsync(string token, string realm, Guid groupId,
+        Guid clientId,
+        IList<RoleGroupMapping> roles, CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<string?>> DeleteGroupClientRolesAsync(string token, string realm, Guid groupId,
+        Guid clientId,
+        IList<RoleGroupMapping> roles, CancellationToken cancellationToken = default);
+
+
+    public Task<DefaultResponseBody<IList<RoleResponse>?>> GetClientRolesAsync(string token, string realm,
+        Guid clientId,
+        Params? queryParams = null);
+
+    public Task<DefaultResponseBody<string?>> CreateClientRolesAsync(string token, string realm, Guid clientId,
+        RoleCreateRequestBody body);
+
+    public Task<DefaultResponseBody<string?>> DeleteClientRolesAsync(string token, string realm, Guid clientId,
+        string roleName,
+        CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<IList<ClientResponse>?>> GetClientByNameAsync(string token, string realm,
+        string clientName,
+        CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<IList<UserResponse>?>> GetUsersAsync(string token, string realm,
+        Params? queryParams = null,
+        CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<string?>> UserJoinGroupAsync(string token, string realm, Guid userId, Guid groupId,
+        CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<string?>> UserLeaveGroupAsync(string token, string realm, Guid userId, Guid groupId,
+        CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<string>> LogoffAsync(string realm, LogoffRequestBody requestBody);
+
+    public Task<DefaultResponseBody<UserResponse>> CreateUserAsync(string adminToken, string realm,
+        UserResponse userInfo, CancellationToken cancellationToken);
+
+    public Task<DefaultResponseBody<List<GroupResponse>>> UserGetGroupsByParentGroupAsync(string token, string realm,
+        Guid userId,
+        Guid groupId,
+        CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<List<GroupResponse>?>> UserGetGroupsAsync(string token, string realm, Guid userId,
+        CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<bool>> UserIsInGroupAsync(string token, string realm, Guid userId,
+        Guid groupId,
+        CancellationToken cancellationToken = default);
+}
+</file>
+
+<file path="Providers/RhbkClient.cs">
+using System.Collections;
+using Refit;
+using RhbkSdk.Exceptions;
+using RhbkSdk.Interfaces;
+using RhbkSdk.Models;
+using RhbkSdk.RequestBody;
+using RhbkSdk.RequestParams;
+using RhbkSdk.ResponseBody;
+
+namespace RhbkSdk.Providers;
+
+public class RhbkClient : IRhbkClient
+{
+    private readonly string _baseUrl;
+    private readonly IRhbkClientApi _clientApi;
+
+
+    public RhbkClient(string baseUrl = "https://skh.saude.rj.gov.br")
+    {
+        _baseUrl = baseUrl;
+
+        var httpClient = new HttpClient
+        {
+            BaseAddress = new Uri(_baseUrl),
+            Timeout = TimeSpan.FromMinutes(3),
+            DefaultRequestHeaders = { { "User-Agent", "Refit" } }
+        };
+        _clientApi = RestService.For<IRhbkClientApi>(
+            httpClient, new RefitSettings
+            {
+                ContentSerializer = new SystemTextJsonContentSerializer()
+            });
+    }
+
+
+    #region Url Methods
+
+    public DefaultResponseBody<string> GetLoginUrl(string realm)
+    {
+        return new DefaultResponseBody<string>()
+        {
+            StatusCode = 200,
+            Data = $"{_baseUrl}/realms/{realm}/protocol/openid-connect/auth"
+        };
+    }
+
+    public DefaultResponseBody<string> GetLoginProviderUrl(string realm, string clientId, string redirectUri,
+        string scope = "openid email profile")
+    {
+        return new DefaultResponseBody<string>()
+        {
+            StatusCode = 200,
+            Data = $"{GetLoginUrl(realm).Data}?client_id={clientId}&response_type=code&redirect_uri={redirectUri}&scope={scope}"
+        };
+    }
+
+    public DefaultResponseBody<string> GetTokenUrl(string realm)
+    {
+        return new DefaultResponseBody<string>()
+        {
+            StatusCode = 200,
+            Data = $"{_baseUrl}/realms/{realm}/protocol/openid-connect/token"
+        };
+    }
+
+    public DefaultResponseBody<string> GetUserInfoUrl(string realm)
+    {
+        return new DefaultResponseBody<string>()
+        {
+            StatusCode = 200,
+            Data = $"{_baseUrl}/realms/{realm}/protocol/openid-connect/userinfo"
+        };
+    }
+
+    public DefaultResponseBody<string> GetLogoutUrl(string realm, string token, string url)
+    {
+        return new DefaultResponseBody<string>()
+        {
+            StatusCode = 200,
+            Data = $"{_baseUrl}/realms/{realm}/protocol/openid-connect/logout?id_token_hint={token}&post_logout_redirect_uri={url}"
+        };
+    }
+
+    public DefaultResponseBody<string> GetGroupsUrl(string realm)
+    {
+        return new DefaultResponseBody<string>()
+        {
+            StatusCode = 200,
+            Data = $"{_baseUrl}/realms/{realm}/protocol/openid-connect/groups"
+        };
+    }
+
+    #endregion
+
+
+    #region Token Methods
+
+    public async Task<DefaultResponseBody<GetTokenResponseBody?>> GetTokenAsync(string realm, GetTokenRequestBody body,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.GetTokenAsync(realm, body, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<string>> LogoffAsync(string realm, LogoffRequestBody requestBody)
+    {
+        var body = requestBody.ToDictionary();
+        var result = await _clientApi.LogoffAsync(realm, body);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    #endregion
+
+    #region Group Methods
+
+    public async Task<DefaultResponseBody<string?>> CreateGroupAsync(string token, string realm,
+        GroupCreateRequestBody body,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.CreateGroupAsync($"Bearer {token}", realm, body, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<IList<GroupResponse>?>> GetGroupAsync(string token, string realm,
+        Params? queryParams = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.GetAllGroupAsync($"Bearer {token}", realm, queryParams, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<string?>> CreateSubGroupAsync(string token, string realm, Guid groupId,
+        GroupCreateRequestBody body, CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.CreateSubGroupAsync($"Bearer {token}", realm, groupId, body, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<IList<GroupResponse>?>> GetSubGroupAsync(string token, string realm,
+        Guid groupId,
+        Params? queryParams = null, CancellationToken cancellationToken = default)
+    {
+        var result =
+            await _clientApi.GetAllSubgroupsAsync($"Bearer {token}", realm, groupId, queryParams, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<IList<RoleGroupMapping>?>> GetGroupClientRolesAsync(string token,
+        string realm, Guid groupId,
+        Guid clientId, Params? queryParams = null, CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.GetGroupClientRolesAsync($"Bearer {token}", realm, groupId, clientId, queryParams,
+            cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<IList<UserResponse>?>> GetGroupMembersAsync(string token, string realm,
+        Guid groupId,
+        Params? queryParams = null, CancellationToken cancellationToken = default)
+    {
+        var result =
+            await _clientApi.GetGroupMembersAsync($"Bearer {token}", realm, groupId, queryParams, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<IList<UserResponse>>> GetGroupMembersFromSubGroupsAsync(string token,
+        string realm, Guid groupId,
+        Params? queryParams = null, CancellationToken cancellationToken = default)
+    {
+        List<UserResponse> result = new List<UserResponse>();
+        var groups = await GetSubGroupAsync(token, realm, groupId, cancellationToken: cancellationToken);
+        if (groups.Data != null)
+        {
+            foreach (var group in groups.Data)
+            {
+                bool stillHasMembers = true;
+                while (stillHasMembers)
+                {
+                    queryParams = queryParams ?? new Params() { First = 0 };
+                    var users = await _clientApi.GetGroupMembersAsync($"Bearer {token}", realm, group.Id, queryParams,
+                        cancellationToken);
+                    CaptureException(users);
+                    queryParams.First += 1;
+                    if (users.Content != null && users.Content.Count > 0)
+                        result.AddRange(users.Content!);
+                    else
+                        stillHasMembers = false;
+                }
+            }
+        }
+
+        return new DefaultResponseBody<IList<UserResponse>>()
+        {
+            StatusCode = 200,
+            Data = result
+        };
+    }
+
+    public async Task<DefaultResponseBody<IList<UserResponse>?>> DeleteGroupOrSubGroupAsync(string token, string realm,
+        Guid groupId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.DeleteGroupAsync($"Bearer {token}", realm, groupId, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<string?>> CreateGroupClientRolesAsync(string token, string realm,
+        Guid groupId, Guid clientId,
+        IList<RoleGroupMapping> roles, CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.CreateGroupClientRolesAsync($"Bearer {token}", realm, groupId, clientId, roles,
+            cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<string?>> DeleteGroupClientRolesAsync(string token, string realm,
+        Guid groupId, Guid clientId,
+        IList<RoleGroupMapping> roles, CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.DeleteGroupClientRolesAsync($"Bearer {token}", realm, groupId, clientId, roles,
+            cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    #endregion
+
+    #region Client Methods
+
+    public async Task<DefaultResponseBody<IList<RoleResponse>?>> GetClientRolesAsync(string token, string realm,
+        Guid clientId,
+        Params? queryParams = null)
+    {
+        var result = await _clientApi.GetClientRolesAsync($"Bearer {token}", realm, clientId, queryParams);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<string?>> CreateClientRolesAsync(string token, string realm, Guid clientId,
+        RoleCreateRequestBody body)
+    {
+        var result = await _clientApi.CreateClientRolesAsync($"Bearer {token}", realm, clientId, body);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<string?>> DeleteClientRolesAsync(string token, string realm, Guid clientId,
+        string roleName,
+        CancellationToken cancellationToken = default)
+    {
+        var result =
+            await _clientApi.DeleteClientRolesAsync($"Bearer {token}", realm, clientId, roleName, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<IList<ClientResponse>?>> GetClientByNameAsync(string token, string realm,
+        string clientName,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.GetClientByNameAsync($"Bearer {token}", realm, clientName, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    #endregion
+
+    #region User Methods
+
+    public async Task<DefaultResponseBody<IList<UserResponse>?>> GetUsersAsync(string token, string realm,
+        Params? queryParams = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.GetUsersAsync($"Bearer {token}", realm, queryParams, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<string?>> UserJoinGroupAsync(string token, string realm, Guid userId,
+        Guid groupId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.UserJoinGroupAsync($"Bearer {token}", realm, userId, groupId, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<string?>> UserLeaveGroupAsync(string token, string realm, Guid userId,
+        Guid groupId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.UserLeaveGroupAsync($"Bearer {token}", realm, userId, groupId, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+    
+    public async Task<DefaultResponseBody<List<GroupResponse>?>> UserGetGroupsAsync(string token, string realm, Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.UserGetGroupsAsync($"Bearer {token}", realm, userId, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<List<GroupResponse>>> UserGetGroupsByParentGroupAsync(string token, string realm, Guid userId,
+        Guid groupId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await UserGetGroupsAsync(token, realm, userId, cancellationToken);
+        var finteredResult = result!.Data!.Where(x => x.ParentId == groupId).ToList();
+        return new DefaultResponseBody<List<GroupResponse>>
+        {
+            Data = finteredResult,
+            StatusCode = 200
+        };
+    }
+    
+    public async Task<DefaultResponseBody<bool>> UserIsInGroupAsync(string token, string realm, Guid userId,
+        Guid groupId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await UserGetGroupsByParentGroupAsync(token, realm, userId, groupId, cancellationToken);
+        var isInGroup = result.Data!.Any(x => x.Id == groupId);
+        return new DefaultResponseBody<bool>
+        {
+            Data = isInGroup,
+            StatusCode = 200
+        };
+    }
+
+    public async Task<DefaultResponseBody<UserResponse>> CreateUserAsync(string adminToken, string realm, UserResponse userInfo, CancellationToken cancellationToken)
+    {
+        var result = await _clientApi.CreateUserAsync($"Bearer {adminToken}", realm, userInfo, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    #endregion
+
+    private void CaptureException<T>(ApiResponse<T> ex)
+    {
+        if (!ex.IsSuccessStatusCode && ex.Error != null)
+        {
+            var messageFromRequest = ex.Error.Content ?? string.Empty;
+            throw new RhbkSdkDefaultException(
+                (int)ex.StatusCode,
+                $"{ex.Error?.Message}\r\n{messageFromRequest}");
+        }
+    }
+
+    private DefaultResponseBody<T> GenResponse<T>(ApiResponse<T> response)
+    {
+        return new DefaultResponseBody<T>()
+        {
+            StatusCode = (int)response.StatusCode,
+            Data = response.Content
+        };
+    }
+}
+</file>
+
+<file path="RhbkSdk.csproj">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Authors>Wallace Vidal</Authors>
+    <PackageId>RhbkSdk</PackageId>
+    <Description>SDK para integração com a API RHBK</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <RepositoryUrl>https://github.com/wallacevff/RhbkSdk</RepositoryUrl>
+    <PackageIcon>Assets\redhat.png</PackageIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0-preview.4.25258.110" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Refit" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="README.md" Pack="true" PackagePath="">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Microsoft.AspNetCore.dll" />
+    <Content Include="Microsoft.AspNetCore.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Assets\redhat.png" Pack="true" PackagePath="Assets">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="LICENSE.txt" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.AspNetCore">
+      <HintPath>Microsoft.AspNetCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
+</file>
+
+</files>

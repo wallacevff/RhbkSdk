@@ -15,6 +15,16 @@ public partial interface IRhbkClientApi
         [Body] GroupCreateRequestBody body,
         CancellationToken cancellationToken = default
     );
+    
+    [Put("/admin/realms/{realm}/groups/{group_id}")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<string?>> EditGroupAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("group_id")] Guid groupId,
+        [Body] GroupUpdateRequestBody body,
+        CancellationToken cancellationToken = default
+    );
 
 
     [Get("/admin/realms/{realm}/groups")]
