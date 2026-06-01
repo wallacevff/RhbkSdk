@@ -13,7 +13,7 @@ public interface IRhbkClient
         string realm,
         string clientId,
         string redirectUri,
-        string scope = "openid email profile sign");
+        string scope = "openid profile email");
 
     public DefaultResponseBody<string> GetTokenUrl(string realm);
     public DefaultResponseBody<string> GetUserInfoUrl(string realm);
