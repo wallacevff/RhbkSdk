@@ -396,7 +396,7 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
-    public async Task<DefaultResponseBody<List<UserResponse>>> SearchUsersByUsernameAsync(string token, string realm, string username, bool exact, Params? queryParams = null, CancellationToken cancellationToken = default)
+    public async Task<DefaultResponseBody<IList<UserResponse>>> SearchUsersByUsernameAsync(string token, string realm, string username, bool exact, Params? queryParams = null, CancellationToken cancellationToken = default)
     {
         var result = await _clientApi.SearchUsersByUsernameAsync($"Bearer {token}", realm, username, exact, queryParams, cancellationToken);
         CaptureException(result);

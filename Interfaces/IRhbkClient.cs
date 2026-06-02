@@ -23,7 +23,7 @@ public interface IRhbkClient
     public Task<DefaultResponseBody<GetTokenResponseBody?>> GetTokenAsync(string realm, GetTokenRequestBody body,
         CancellationToken cancellationToken = default);
 
-    public Task<DefaultResponseBody<List<UserResponse>> SearchUsersByUsernameAsync(string token, string realm, string username, bool exact, Params? queryParams = null, CancellationToken cancellationToken = default);
+    public Task<DefaultResponseBody<IList<UserResponse>>> SearchUsersByUsernameAsync(string token, string realm, string username, bool exact, Params? queryParams = null, CancellationToken cancellationToken = default);
 
     public Task<DefaultResponseBody<UserResponse>> GetUserByIdAsync(string token, string realm, Guid userId, CancellationToken cancellationToken = default);
 
