@@ -23,6 +23,16 @@ public interface IRhbkClient
     public Task<DefaultResponseBody<GetTokenResponseBody?>> GetTokenAsync(string realm, GetTokenRequestBody body,
         CancellationToken cancellationToken = default);
 
+    public Task<DefaultResponseBody<List<UserResponse>> SearchUsersByUsernameAsync(string token, string realm, string username, bool exact, Params? queryParams = null, CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<UserResponse>> GetUserByIdAsync(string token, string realm, Guid userId, CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<string>> AddUserAttributeAsync(string token, string realm, Guid userId, string key, string value, CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<string>> RemoveUserAttributeAsync(string token, string realm, Guid userId, string key, CancellationToken cancellationToken = default);
+
+    public Task<DefaultResponseBody<string>> SetUserAttributesAsync(string token, string realm, Guid userId, Dictionary<string, IList<string>> attributes, CancellationToken cancellationToken = default);
+
     public Task<DefaultResponseBody<string?>> CreateGroupAsync(string token, string realm, GroupCreateRequestBody body,
         CancellationToken cancellationToken = default);
 

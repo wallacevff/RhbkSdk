@@ -514,17 +514,6 @@ include:
     file: 'simple-ci/manifests/v1/v1.yml'
 </file>
 
-<file path="GrantType.cs">
-namespace RhbkSdk;
-
-public class GrantTypeOption
-{
-    public const string AuthorizationCode = "authorization_code";
-    public const string RefreshToken = "refresh_token";
-    public const string Password = "password";
-}
-</file>
-
 <file path="RhbkSdk.sln">
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
@@ -1142,6 +1131,18 @@ MigrationBackup/
 FodyWeavers.xsd
 </file>
 
+<file path="GrantType.cs">
+namespace RhbkSdk;
+
+public class GrantTypeOption
+{
+    public const string AuthorizationCode = "authorization_code";
+    public const string RefreshToken = "refresh_token";
+    public const string Password = "password";
+    public const string ClientCredentials = "client_credentials";
+}
+</file>
+
 <file path="LICENSE.txt">
 MIT License
 
@@ -1718,7 +1719,7 @@ public interface IRhbkClient
         string realm,
         string clientId,
         string redirectUri,
-        string scope = "openid email profile sign");
+        string scope = "openid profile email");
 
     public DefaultResponseBody<string> GetTokenUrl(string realm);
     public DefaultResponseBody<string> GetUserInfoUrl(string realm);

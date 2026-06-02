@@ -396,6 +396,95 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
+    public async Task<DefaultResponseBody<List<UserResponse>>> SearchUsersByUsernameAsync(string token, string realm, string username, bool exact, Params? queryParams = null, CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.SearchUsersByUsernameAsync($"Bearer {token}", realm, username, exact, queryParams, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<UserResponse>> GetUserByIdAsync(string token, string realm, Guid userId, CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.GetUserByIdAsync($"Bearer {token}", realm, userId, cancellationToken);
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<string>> AddUserAttributeAsync(string token, string realm, Guid userId, string key, string value, CancellationToken cancellationToken = default)
+    {
+        var user = await GetUserByIdAsync(token, realm, userId, cancellationToken);
+        var attributes = user.Data?.Attributes is null
+            ? new Dictionary<string, IList<string>>(StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, IList<string>>(user.Data.Attributes, StringComparer.OrdinalIgnoreCase);
+
+        if (!attributes.ContainsKey(key))
+        {
+            attributes[key] = new List<string>();
+        }
+
+        if (!attributes[key].Contains(value, StringComparer.OrdinalIgnoreCase))
+        {
+            attributes[key].Add(value);
+        }
+
+        var result = await _clientApi.UpdateUserAsync($"Bearer {token}", realm, userId, new UserResponse
+        {
+            Id = user.Data!.Id,
+            Username = user.Data.Username,
+            FirstName = user.Data.FirstName,
+            LastName = user.Data.LastName,
+            Email = user.Data.Email,
+            Attributes = attributes
+        }, cancellationToken);
+
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<string>> RemoveUserAttributeAsync(string token, string realm, Guid userId, string key, CancellationToken cancellationToken = default)
+    {
+        var user = await GetUserByIdAsync(token, realm, userId, cancellationToken);
+        var attributes = user.Data?.Attributes is null
+            ? new Dictionary<string, IList<string>>(StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, IList<string>>(user.Data.Attributes, StringComparer.OrdinalIgnoreCase);
+
+        if (attributes.ContainsKey(key))
+        {
+            attributes.Remove(key);
+        }
+
+        var result = await _clientApi.UpdateUserAsync($"Bearer {token}", realm, userId, new UserResponse
+        {
+            Id = user.Data!.Id,
+            Username = user.Data.Username,
+            FirstName = user.Data.FirstName,
+            LastName = user.Data.LastName,
+            Email = user.Data.Email,
+            Attributes = attributes
+        }, cancellationToken);
+
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
+    public async Task<DefaultResponseBody<string>> SetUserAttributesAsync(string token, string realm, Guid userId, Dictionary<string, IList<string>> attributes, CancellationToken cancellationToken = default)
+    {
+        var user = await GetUserByIdAsync(token, realm, userId, cancellationToken);
+
+        var result = await _clientApi.UpdateUserAsync($"Bearer {token}", realm, userId, new UserResponse
+        {
+            Id = user.Data!.Id,
+            Username = user.Data.Username,
+            FirstName = user.Data.FirstName,
+            LastName = user.Data.LastName,
+            Email = user.Data.Email,
+            Attributes = attributes
+        }, cancellationToken);
+
+        CaptureException(result);
+        return GenResponse(result);
+    }
+
     public async Task<DefaultResponseBody<string?>> UserJoinGroupAsync(string token, string realm, Guid userId,
         Guid groupId,
         CancellationToken cancellationToken = default)

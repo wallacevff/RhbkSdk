@@ -52,4 +52,34 @@ public partial interface IRhbkClientApi
         [Body] UserResponse userResponse,
         CancellationToken cancellationToken = default
     );
+
+    [Get("/admin/realms/{realm}/users")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<IList<UserResponse>?>> SearchUsersByUsernameAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [Query] string username,
+        [Query] bool exact,
+        Params? queryParams = null,
+        CancellationToken cancellationToken = default
+    );
+
+    [Get("/admin/realms/{realm}/users/{userId}")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<UserResponse?>> GetUserByIdAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("userId")] Guid userId,
+        CancellationToken cancellationToken = default
+    );
+
+    [Put("/admin/realms/{realm}/users/{userId}")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<string?>> UpdateUserAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("userId")] Guid userId,
+        [Body] UserResponse userResponse,
+        CancellationToken cancellationToken = default
+    );
 }
