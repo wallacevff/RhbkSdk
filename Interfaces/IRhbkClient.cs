@@ -49,6 +49,9 @@ public interface IRhbkClient
     public Task<DefaultResponseBody<IList<GroupResponse>?>> GetSubGroupAsync(string token, string realm, Guid groupId,
         Params? queryParams = null, CancellationToken cancellationToken = default);
 
+    public Task<DefaultResponseBody<GroupResponse>> GetGroupByIdAsync(string token, string realm, Guid groupId,
+        CancellationToken cancellationToken = default);
+
     public Task<DefaultResponseBody<IList<RoleGroupMapping>?>> GetGroupClientRolesAsync(string token, string realm,
         Guid groupId,
         Guid clientId,

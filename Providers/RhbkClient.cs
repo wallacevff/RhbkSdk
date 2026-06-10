@@ -160,6 +160,18 @@ public class RhbkClient : IRhbkClient
         return GenResponse(result);
     }
 
+    public async Task<DefaultResponseBody<GroupResponse>> GetGroupByIdAsync(string token, string realm, Guid groupId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientApi.GetGroupByIdAsync($"Bearer {token}", realm, groupId, cancellationToken);
+        CaptureException(result);
+        return new DefaultResponseBody<GroupResponse>
+        {
+            StatusCode = (int)result.StatusCode,
+            Data = result.Content ?? throw new RhbkSdkDefaultException(404, $"Group '{groupId}' not found.")
+        };
+    }
+
     public async Task<DefaultResponseBody<IList<RoleGroupMapping>?>> GetGroupClientRolesAsync(string token,
         string realm, Guid groupId,
         Guid clientId, Params? queryParams = null, CancellationToken cancellationToken = default)
@@ -252,7 +264,8 @@ public class RhbkClient : IRhbkClient
         string disabledAttributeName = "disabled",
         CancellationToken cancellationToken = default)
     {
-        var group = await FindGroupByIdAsync(token, realm, groupId, cancellationToken);
+        var groupResponse = await GetGroupByIdAsync(token, realm, groupId, cancellationToken);
+        var group = groupResponse.Data ?? throw new RhbkSdkDefaultException(404, $"Group '{groupId}' not found.");
         var attributes = group.Attributes is null
             ? new Dictionary<string, IList<string>>(StringComparer.OrdinalIgnoreCase)
             : new Dictionary<string, IList<string>>(group.Attributes, StringComparer.OrdinalIgnoreCase);
@@ -564,42 +577,6 @@ public class RhbkClient : IRhbkClient
             StatusCode = (int)response.StatusCode,
             Data = response.Content
         };
-    }
-
-    private async Task<GroupResponse> FindGroupByIdAsync(
-        string token,
-        string realm,
-        Guid groupId,
-        CancellationToken cancellationToken)
-    {
-        var rootsResponse = await GetGroupAsync(token, realm, cancellationToken: cancellationToken);
-        var queue = new Queue<GroupResponse>(rootsResponse.Data ?? []);
-        while (queue.Count > 0)
-        {
-            var current = queue.Dequeue();
-            if (current.Id == groupId)
-            {
-                return current;
-            }
-
-            var childrenResponse = await GetSubGroupAsync(
-                token,
-                realm,
-                current.Id,
-                cancellationToken: cancellationToken
-            );
-            if (childrenResponse.Data is null)
-            {
-                continue;
-            }
-
-            foreach (var child in childrenResponse.Data)
-            {
-                queue.Enqueue(child);
-            }
-        }
-
-        throw new RhbkSdkDefaultException(404, $"Group '{groupId}' not found.");
     }
 
     private static HashSet<string> ReadBackupRoleNames(

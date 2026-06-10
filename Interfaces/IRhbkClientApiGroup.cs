@@ -47,6 +47,15 @@ public partial interface IRhbkClientApi
         CancellationToken cancellationToken = default
     );
 
+    [Get("/admin/realms/{realm}/groups/{group_id}")]
+    [Headers("Content-Type; application/json")]
+    public Task<ApiResponse<GroupResponse?>> GetGroupByIdAsync(
+        [Header("Authorization")] string token,
+        [AliasAs("realm")] string realm,
+        [AliasAs("group_id")] Guid groupId,
+        CancellationToken cancellationToken = default
+    );
+
     [Post("/admin/realms/{realm}/groups/{group_id}/children")]
     [Headers("Content-Type; application/json")]
     public Task<ApiResponse<string?>> CreateSubGroupAsync(

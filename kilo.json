@@ -1,0 +1,8 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "indexing": {
+    "enabled": true,
+    "vectorStore": "lancedb",
+    "lancedb": {}
+  }
+}
